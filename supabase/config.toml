@@ -1,0 +1,33 @@
+# Supabase local development configuration for TarlingBook
+project_id = "tarlingbook"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "auth", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+buckets = [
+  { id = "artist-photos", public = true },
+  { id = "ktp-verifications", public = false },
+  { id = "cash-receipts", public = false },
+  { id = "dispute-evidences", public = false }
+]

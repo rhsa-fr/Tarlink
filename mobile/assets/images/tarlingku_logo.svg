@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <defs>
+    <linearGradient id="gradTarling" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#BD4024"/>
+      <stop offset="100%" stop-color="#D4A017"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(10, 8)">
+    <rect width="44" height="44" rx="12" fill="url(#gradTarling)"/>
+    <path d="M22 12C16.48 12 12 16.48 12 22C12 27.52 16.48 32 22 32C27.52 32 32 27.52 32 22C32 16.48 27.52 12 22 12ZM20 28V16L27 22L20 28Z" fill="#FFFFFF"/>
+    <circle cx="32" cy="14" r="3" fill="#FFE599"/>
+  </g>
+  <text x="64" y="36" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="24" fill="#BD4024">Tarling<tspan fill="#D4A017">Ku</tspan></text>
+  <text x="65" y="47" font-family="'Plus Jakarta Sans', sans-serif" font-weight="500" font-size="9" fill="#71717A" letter-spacing="1">BOOKING ORKES &amp; SENI</text>
+</svg>

@@ -1,0 +1,51 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+Thumbs.db
+.history
+.svn/
+
+# IDE and Editors
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Local agents & test cache
+.agents/
+.playwright-mcp/
+
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+mobile/build/
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.pub-cache/
+mobile/.pub/
+
+# Android build outputs
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/.gradle/
+**/local.properties
+**/GeneratedPluginRegistrant.java
+
+# Node / JS
+node_modules/
+npm-debug.log*
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
