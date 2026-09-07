@@ -95,6 +95,35 @@ class AppTheme {
         ),
         hintStyle: GoogleFonts.plusJakartaSans(color: AppColors.textMuted, fontSize: 14),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        elevation: 3,
+        shadowColor: AppColors.primary.withValues(alpha: 0.08),
+        indicatorColor: AppColors.primaryLight,
+        height: 68,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primaryDark,
+              letterSpacing: 0.02 * 12,
+            );
+          }
+          return GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.01 * 12,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.primaryDark, size: 24);
+          }
+          return const IconThemeData(color: AppColors.textSecondary, size: 24);
+        }),
+      ),
     );
   }
 

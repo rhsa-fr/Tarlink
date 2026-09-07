@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -13,7 +14,7 @@ import '../../../auth/presentation/screens/account_screen.dart';
 import '../../../chat_bot/presentation/screens/faq_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 
-/// Beranda Utama TarlingKu - Mengacu pada Desain Google Stitch 'TarlingKu Booking App UI'
+/// Beranda Utama Tarlink - Mengacu pada Desain Google Stitch 'Tarlink Booking App UI'
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onExploreTap;
   final CatalogRepository? repository;
@@ -142,28 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
       titleSpacing: 16,
-      title: Row(
-        children: [
-          SvgPicture.asset(
-            'assets/images/tarlingku_logo.svg',
-            height: 34,
-            placeholderBuilder: (_) => const Row(
-              children: [
-                Icon(Icons.music_note, color: AppColors.primary, size: 28),
-                SizedBox(width: 6),
-                Text(
-                  'TarlingKu',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      title: const TarlinkLogo(height: 30, showSubtitle: true),
       actions: [
         // Location Badge Chip
         Container(
@@ -173,14 +153,14 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(9999),
             border: Border.all(color: AppColors.borderSubtle),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.location_on, size: 15, color: AppColors.primary),
               SizedBox(width: 4),
               Text(
                 'Pantura',
-                style: TextStyle(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -295,13 +275,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Icon(Icons.search, color: AppColors.primary, size: 22),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Cari grup tarling, sandiwara, orkes...',
-                  style: TextStyle(
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
                     color: AppColors.textMuted,
                     fontSize: 14,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -335,10 +315,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Icon(Icons.celebration, color: AppColors.secondaryDark, size: 18),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Musim Panen & Hajat Ramai di Cirebon-Indramayu',
-                style: TextStyle(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.onSecondaryContainer,
@@ -350,9 +330,9 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 _showCalendarAdviceModal(context);
               },
-              child: const Text(
+              child: Text(
                 'Cek Tanggal',
-                style: TextStyle(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,
@@ -385,9 +365,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const Positioned(
               right: -20,
               bottom: -20,
-              child: Opacity(
-                opacity: 0.12,
-                child: Icon(Icons.cloud_queue, size: 180, color: Colors.white),
+              child: ExcludeSemantics(
+                child: Opacity(
+                  opacity: 0.12,
+                  child: Icon(Icons.cloud_queue, size: 180, color: Colors.white),
+                ),
               ),
             ),
             Padding(
@@ -404,14 +386,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: AppColors.secondaryContainer,
                           borderRadius: BorderRadius.circular(9999),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.local_fire_department, color: AppColors.onSecondaryContainer, size: 14),
                             SizedBox(width: 4),
                             Text(
                               'TERBATAS MUSIM INI',
-                              style: TextStyle(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.onSecondaryContainer,
@@ -421,9 +403,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      const Text(
+                      Text(
                         'KODE: HAJAT2026',
-                        style: TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
@@ -433,9 +415,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Promo Musim Hajatan Pantura',
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -443,9 +425,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Booking paket tarling lengkap, dapatkan gratis sound system tambahan 5.000 Watt khusus wilayah Cirebon & Indramayu!',
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       color: Color(0xFFFFDAD2),
                       fontSize: 13,
                       height: 1.4,
@@ -469,10 +451,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
                       elevation: 0,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Klaim Kupon', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                        Text('Klaim Kupon', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13)),
                         SizedBox(width: 6),
                         Icon(Icons.arrow_forward, size: 16),
                       ],
@@ -531,9 +513,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Pilih Kategori Acara',
-                style: TextStyle(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
@@ -545,9 +527,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     widget.onExploreTap!();
                   }
                 },
-                child: const Text(
+                child: Text(
                   'Lihat Semua',
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -585,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 8),
                       Text(
                         c['title'] as String,
-                        style: const TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -593,7 +575,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Text(
                         c['sub'] as String,
-                        style: const TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           color: AppColors.textSecondary,
                         ),
@@ -618,12 +600,12 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Grup Tarling Populer',
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -631,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Text(
                     'Terfavorit hajatan Cirebon - Indramayu',
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                     ),
@@ -644,9 +626,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     widget.onExploreTap!();
                   }
                 },
-                child: const Text(
+                child: Text(
                   'Lihat Semua',
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -722,7 +704,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Text(
                     artist.category,
-                    style: const TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -772,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: Text(
                         artist.displayName,
-                        style: const TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
@@ -793,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: Text(
                         '${artist.baseDistrict ?? ''}, ${artist.baseCity}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -807,12 +789,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 3),
                     Text(
                       artist.ratingAvg.toStringAsFixed(1),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '(${artist.totalJob} ulasan)',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textMuted),
                     ),
                   ],
                 ),
@@ -830,10 +812,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Mulai dari', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                          Text('Mulai dari', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.textMuted)),
                           Text(
                             CurrencyFormatter.formatCompact(artist.priceMin),
-                            style: const TextStyle(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: AppColors.primary,
@@ -858,7 +840,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
                           elevation: 0,
                         ),
-                        child: const Text('Detail', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        child: Text('Detail', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -932,12 +914,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'AUDIO SAMPLE LIVE',
-                        style: TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           color: AppColors.secondaryContainer,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -946,14 +928,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Text(
                         '03:45',
-                        style: TextStyle(color: Colors.white60, fontSize: 11),
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white60, fontSize: 11),
                       ),
                     ],
                   ),
                   const SizedBox(height: 3),
-                  const Text(
+                  Text(
                     'Keloas - Dian Anic (Live Hajat Jatibarang)',
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -992,9 +974,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Panduan & Keamanan Booking',
-            style: TextStyle(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 17,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -1024,13 +1006,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: const Icon(Icons.calendar_today, color: AppColors.tertiary, size: 24),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Waktu Terbaik Booking Orkes',
-                            style: TextStyle(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
@@ -1039,7 +1021,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           SizedBox(height: 4),
                           Text(
                             'Untuk bulan hajat (Rayagung & Syawal), amankan tanggal minimal 3-6 bulan sebelum hari H agar sinden & kendang utama tidak bentrok.',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+                            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
                           ),
                         ],
                       ),
@@ -1071,20 +1053,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: AppColors.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.help_outline, size: 18, color: AppColors.primary),
-                            SizedBox(width: 8),
+                            const Icon(Icons.help_outline, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 8),
                             Text(
                               'Pusat Bantuan & Tanya Jawab',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.onSurface),
+                              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.onSurface),
                             ),
                           ],
                         ),
-                        Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.onSurfaceVariant),
+                        const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.onSurfaceVariant),
                       ],
                     ),
                   ),
@@ -1102,8 +1084,8 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Icon(icon, size: 22, color: AppColors.primary),
         const SizedBox(height: 4),
-        Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        Text(sub, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+        Text(title, style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        Text(sub, style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.textMuted)),
       ],
     );
   }
@@ -1121,20 +1103,20 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.calendar_month, color: AppColors.primary),
-                  SizedBox(width: 8),
+                  const Icon(Icons.calendar_month, color: AppColors.primary),
+                  const SizedBox(width: 8),
                   Text(
                     'Kalender Tanggal Baik Hajatan',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Musim hajatan Pantura (Cirebon & Indramayu) memiliki tanggal-tanggal padat di mana jadwal grup tarling cepat terisi penuh.',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 16),
               Container(
@@ -1143,13 +1125,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: AppColors.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.check_circle, size: 16, color: AppColors.tertiary),
-                        SizedBox(width: 8),
-                        Text('Bulan Rayagung & Dzulhijjah: Puncak pernikahan', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        const Icon(Icons.check_circle, size: 16, color: AppColors.tertiary),
+                        const SizedBox(width: 8),
+                        Text('Bulan Rayagung & Dzulhijjah: Puncak pernikahan', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     SizedBox(height: 8),
@@ -1157,7 +1139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(Icons.check_circle, size: 16, color: AppColors.tertiary),
                         SizedBox(width: 8),
-                        Text('Bulan Syawal & Mulud: Ramai khitanan & syukuran', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        Text('Bulan Syawal & Mulud: Ramai khitanan & syukuran', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ],
@@ -1173,7 +1155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
                   ),
-                  child: const Text('Mengerti', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text('Mengerti', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

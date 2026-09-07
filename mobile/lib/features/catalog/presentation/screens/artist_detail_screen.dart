@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -13,7 +14,7 @@ import '../../data/models/package_model.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
 import '../../domain/repositories/catalog_repository.dart';
 
-/// Halaman Detail Rombongan Grup Seni Pantura - Desain Resmi Google Stitch 'TarlingKu'
+/// Halaman Detail Rombongan Grup Seni Pantura - Desain Resmi Google Stitch 'Tarlink'
 class ArtistDetailScreen extends StatefulWidget {
   final ArtistProfileModel artist;
   final CatalogRepository? repository;
@@ -99,13 +100,13 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
 
   Future<void> _shareArtist() async {
     final text = '''
-🎭 *${widget.artist.displayName} - TarlingKu*
+🎭 *${widget.artist.displayName} - Tarlink*
 Kategori: ${widget.artist.categoryDisplay}
 Asal: ${widget.artist.baseDistrict ?? "Pusat"}, ${widget.artist.baseCity}
 Tarif Mulai: ${CurrencyFormatter.formatRupiah(widget.artist.priceMin)}
 Rating: ⭐ ${widget.artist.ratingAvg.toStringAsFixed(1)}/5.0
 
-Pesan rombongan resmi lewat TarlingKu (DP 20% Escrow Aman, Pelunasan Cash di Lokasi):
+Pesan rombongan resmi lewat Tarlink (DP 20% Escrow Aman, Pelunasan Cash di Lokasi):
 https://tarlingku.id/artis/${widget.artist.id}
 ''';
 
@@ -165,13 +166,13 @@ https://tarlingku.id/artis/${widget.artist.id}
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
                       Icon(Icons.videocam, color: AppColors.secondary, size: 20),
                       SizedBox(width: 8),
                       Text(
                         'Cuplikan Panggung Live',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ],
                   ),
@@ -214,9 +215,9 @@ https://tarlingku.id/artis/${widget.artist.id}
                             color: Colors.black.withAlpha(160),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Kualitas Audio HD • 15.000W',
-                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -227,7 +228,7 @@ https://tarlingku.id/artis/${widget.artist.id}
               const SizedBox(height: 12),
               Text(
                 '"${widget.artist.displayName} live performance - Penampilan Akbar di Lapangan Hajat Jatibarang"',
-                style: const TextStyle(color: Colors.white70, fontSize: 12, fontStyle: FontStyle.italic),
+                style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -240,7 +241,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
                   ),
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Tutup Preview', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text('Tutup Preview', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -321,15 +322,11 @@ https://tarlingku.id/artis/${widget.artist.id}
       ),
       title: Row(
         children: [
-          SvgPicture.asset(
-            'assets/images/tarlingku_logo.svg',
-            height: 22,
-            placeholderBuilder: (_) => const Icon(Icons.music_note, color: AppColors.primary, size: 22),
-          ),
+          const TarlinkLogo(height: 22),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'Detail Rombongan',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.onSurface),
+            style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.onSurface),
           ),
         ],
       ),
@@ -386,7 +383,9 @@ https://tarlingku.id/artis/${widget.artist.id}
               ),
             ),
             child: const Center(
-              child: Icon(Icons.theater_comedy, size: 88, color: Colors.white12),
+              child: ExcludeSemantics(
+                child: Icon(Icons.theater_comedy, size: 88, color: Colors.white12),
+              ),
             ),
           ),
 
@@ -423,7 +422,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                       const SizedBox(width: 4),
                       Text(
                         '1 / $_heroPhotoCount',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1),
                       ),
                     ],
                   ),
@@ -480,7 +479,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                       borderRadius: BorderRadius.circular(9999),
                       boxShadow: AppColors.elevation1,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         CircleAvatar(
@@ -491,7 +490,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                         SizedBox(width: 6),
                         Text(
                           'Cuplikan Panggung',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.onSurface),
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.onSurface),
                         ),
                         SizedBox(width: 6),
                         Icon(Icons.circle, size: 6, color: AppColors.primary),
@@ -549,7 +548,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                 ),
                 child: Text(
                   a.categoryDisplay,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
                 ),
               ),
               Container(
@@ -558,12 +557,12 @@ https://tarlingku.id/artis/${widget.artist.id}
                   color: AppColors.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(9999),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.groups, size: 14, color: AppColors.onSurfaceVariant),
                     SizedBox(width: 4),
-                    Text('24 Musisi & Sinden', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                    Text('24 Musisi & Sinden', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.onSurfaceVariant)),
                   ],
                 ),
               ),
@@ -573,14 +572,14 @@ https://tarlingku.id/artis/${widget.artist.id}
                   color: AppColors.secondaryLight.withAlpha(140),
                   borderRadius: BorderRadius.circular(9999),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.verified, size: 14, color: AppColors.secondary),
                     SizedBox(width: 4),
                     Text(
                       'Terverifikasi Resmi',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.secondaryDark),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.secondaryDark),
                     ),
                   ],
                 ),
@@ -614,12 +613,12 @@ https://tarlingku.id/artis/${widget.artist.id}
                   children: [
                     Text(
                       '${a.baseDistrict ?? "Pusat"}, ${a.baseCity}',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.onSurface),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.onSurface),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Siap manggung se-Wilayah III Cirebon (${a.coverageCities.isNotEmpty ? a.coverageCities.join(", ") : "Cirebon, Indramayu, Majalengka"}) & Jabodetabek',
-                      style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant, height: 1.3),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.onSurfaceVariant, height: 1.3),
                     ),
                   ],
                 ),
@@ -659,12 +658,12 @@ https://tarlingku.id/artis/${widget.artist.id}
                             children: [
                               Text(
                                 a.ratingAvg > 0 ? a.ratingAvg.toStringAsFixed(1) : '4.9',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800),
                               ),
-                              const Text('/5.0', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                              Text('/5.0', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.onSurfaceVariant)),
                             ],
                           ),
-                          const Text('342 Ulasan Nyata', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                          Text('342 Ulasan Nyata', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
                         ],
                       ),
                     ],
@@ -697,9 +696,9 @@ https://tarlingku.id/artis/${widget.artist.id}
                         children: [
                           Text(
                             a.totalJob > 0 ? '${a.totalJob}+ Sukses' : '120+ Sukses',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.tertiary),
+                            style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.tertiary),
                           ),
-                          const Text('Hajat Terlaksana', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                          Text('Hajat Terlaksana', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
                         ],
                       ),
                     ],
@@ -749,14 +748,14 @@ https://tarlingku.id/artis/${widget.artist.id}
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Cuplikan Lagu: Baridin Goyang',
-                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
-                      Text('01:45', style: TextStyle(color: AppColors.secondary, fontSize: 10, fontWeight: FontWeight.w600)),
+                      Text('01:45', style: GoogleFonts.plusJakartaSans(color: AppColors.secondary, fontSize: 10, fontWeight: FontWeight.w600)),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -805,16 +804,16 @@ https://tarlingku.id/artis/${widget.artist.id}
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Profil & Pengalaman Panggung',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.onSurface),
+              style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.onSurface),
             ),
             const SizedBox(height: 6),
             Text(
               bio,
               maxLines: _isBioExpanded ? 20 : 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant, height: 1.45),
+              style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.onSurfaceVariant, height: 1.45),
             ),
             InkWell(
               onTap: () => setState(() => _isBioExpanded = !_isBioExpanded),
@@ -825,7 +824,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                   children: [
                     Text(
                       _isBioExpanded ? 'Tutup Narasi' : 'Baca Selengkapnya',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
                     ),
                     Icon(
                       _isBioExpanded ? Icons.expand_less : Icons.expand_more,
@@ -874,7 +873,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                     const SizedBox(height: 2),
                     Text(
                       _formatDate(now, 'MMMM yyyy'),
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.onSurface),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.onSurface),
                     ),
                   ],
                 ),
@@ -884,11 +883,11 @@ https://tarlingku.id/artis/${widget.artist.id}
                     color: AppColors.tertiaryFixed.withAlpha(120),
                     borderRadius: BorderRadius.circular(9999),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(Icons.circle, size: 6, color: AppColors.tertiary),
                       SizedBox(width: 4),
-                      Text('Tersedia', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.onTertiaryFixed)),
+                      Text('Tersedia', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.onTertiaryFixed)),
                     ],
                   ),
                 ),
@@ -919,14 +918,14 @@ https://tarlingku.id/artis/${widget.artist.id}
                       ),
                       child: Column(
                         children: [
-                          Text(dayName, style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                          Text(dayName, style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
                           const SizedBox(height: 2),
                           Text(
                             '${d.day}',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, decoration: TextDecoration.lineThrough, color: AppColors.onSurfaceVariant),
+                            style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.bold, decoration: TextDecoration.lineThrough, color: AppColors.onSurfaceVariant),
                           ),
                           const SizedBox(height: 2),
-                          const Text('Penuh', style: TextStyle(fontSize: 9, color: AppColors.error, fontWeight: FontWeight.bold)),
+                          Text('Penuh', style: GoogleFonts.plusJakartaSans(fontSize: 9, color: AppColors.error, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     );
@@ -951,7 +950,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                         children: [
                           Text(
                             dayName,
-                            style: TextStyle(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: isSelected ? Colors.white70 : AppColors.onSurfaceVariant,
@@ -960,7 +959,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                           const SizedBox(height: 2),
                           Text(
                             '${d.day}',
-                            style: TextStyle(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: isSelected ? Colors.white : AppColors.onSurface,
@@ -969,7 +968,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                           const SizedBox(height: 2),
                           Text(
                             'Buka',
-                            style: TextStyle(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
                               color: isSelected ? Colors.white : AppColors.tertiary,
@@ -1001,13 +1000,13 @@ https://tarlingku.id/artis/${widget.artist.id}
                       const SizedBox(width: 4),
                       Text(
                         'Terpilih: ${_formatDate(_selectedDate, 'EEEE, dd MMMM yyyy')}',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.onSurface),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.onSurface),
                       ),
                     ],
                   ),
-                  const Text(
+                  Text(
                     'Jadwal Buka',
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.tertiary),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.tertiary),
                   ),
                 ],
               ),
@@ -1024,14 +1023,14 @@ https://tarlingku.id/artis/${widget.artist.id}
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Pilihan Paket Pementasan',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.onSurface),
+            style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.onSurface),
           ),
           const SizedBox(height: 2),
-          const Text(
+          Text(
             'Pilih spek orkes sesuai skala acara hajat Anda',
-            style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
 
@@ -1039,143 +1038,165 @@ https://tarlingku.id/artis/${widget.artist.id}
             final isSelected = _selectedPackage?.id == pkg.id;
             final isPopular = pkg.name.toLowerCase().contains('komplit') || pkg.name.toLowerCase().contains('akbar');
 
-            return InkWell(
-              onTap: () => setState(() => _selectedPackage = pkg),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.borderSubtle,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  boxShadow: isSelected ? AppColors.elevation2 : AppColors.elevation1,
+            return Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : AppColors.borderSubtle,
+                  width: isSelected ? 2 : 1,
                 ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      pkg.name,
-                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    const Text(
-                                      'Khusus Resepsi Pengantin & Hajatan Akbar',
-                                      style: TextStyle(fontSize: 11, color: AppColors.secondary, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                width: 22,
-                                height: 22,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.primary : AppColors.surfaceContainerHigh,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.check,
-                                  size: 14,
-                                  color: isSelected ? Colors.white : Colors.transparent,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                CurrencyFormatter.formatRupiah(pkg.price),
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Text('/ Pementasan', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
-                            ],
-                          ),
-
-                          if (pkg.includes != null) ...[
-                            const SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceContainerLow,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                boxShadow: isSelected ? AppColors.elevation2 : AppColors.elevation1,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  onTap: () => setState(() => _selectedPackage = pkg),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
                               child: Column(
-                                children: pkg.includes!.split(',').map((inc) {
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 2.5),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Icon(Icons.check_circle, size: 14, color: AppColors.tertiary),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            inc.trim(),
-                                            style: const TextStyle(fontSize: 11, color: AppColors.onSurface),
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          pkg.name,
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                      if (isPopular) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primaryContainer,
+                                            borderRadius: BorderRadius.circular(9999),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.local_fire_department, size: 12, color: Colors.white),
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                'Populer',
+                                                style: GoogleFonts.plusJakartaSans(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Khusus Resepsi Pengantin & Hajatan Akbar',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      color: AppColors.secondary,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  );
-                                }).toList(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.primary : AppColors.surfaceContainerHigh,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.check,
+                                size: 14,
+                                color: isSelected ? Colors.white : Colors.transparent,
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                    ),
-
-                    // Popular Pill Badge
-                    if (isPopular)
-                      Positioned(
-                        top: -10,
-                        right: 16,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryContainer,
-                            borderRadius: BorderRadius.circular(9999),
-                            boxShadow: AppColors.elevation1,
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.local_fire_department, size: 12, color: Colors.white),
-                              SizedBox(width: 3),
-                              Text(
-                                'Paling Populer',
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                            ],
-                          ),
                         ),
-                      ),
-                  ],
+
+                        const SizedBox(height: 10),
+
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              CurrencyFormatter.formatRupiah(pkg.price),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '/ Pementasan',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        if (pkg.includes != null) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: pkg.includes!.split(',').map((inc) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 2.5),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.check_circle, size: 14, color: AppColors.tertiary),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          inc.trim(),
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            color: AppColors.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             );
@@ -1191,11 +1212,11 @@ https://tarlingku.id/artis/${widget.artist.id}
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Galeri Pentas Terbaru', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              Text('Lihat 18 Foto', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
+              Text('Galeri Pentas Terbaru', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text('Lihat 18 Foto', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 10),
@@ -1235,10 +1256,10 @@ https://tarlingku.id/artis/${widget.artist.id}
                       color: const Color(0xFF191C21),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Text(
                         '+15',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -1273,28 +1294,28 @@ https://tarlingku.id/artis/${widget.artist.id}
                     (i) => const Icon(Icons.star, size: 15, color: AppColors.secondary),
                   ),
                 ),
-                const Text('2 pekan lalu', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                Text('2 pekan lalu', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '"Suara vokal Mbak Dian mantap sekali, tamu undangan sangat terhibur, musisi disiplin dan tepat waktu! Sound system menggelegar tapi tetap empuk di telinga warga sekeliling."',
-              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.onSurface, height: 1.4),
+              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.onSurface, height: 1.4),
             ),
             const SizedBox(height: 10),
-            const Row(
+            Row(
               children: [
                 CircleAvatar(
                   radius: 14,
                   backgroundColor: AppColors.primaryLight,
-                  child: Text('HS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
+                  child: Text('HS', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
                 ),
                 SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('H. Sulaeman', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    Text('Hajatan Pernikahan Putri di Cirebon Barat', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                    Text('H. Sulaeman', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('Hajatan Pernikahan Putri di Cirebon Barat', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
                   ],
                 ),
               ],
@@ -1314,15 +1335,15 @@ https://tarlingku.id/artis/${widget.artist.id}
           color: AppColors.tertiaryFixed.withAlpha(120),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Row(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(Icons.verified_user, size: 20, color: AppColors.tertiary),
             SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Jaminan Pasti Tampil: DP Anda aman ditampung di rekening bersama TarlingKu hingga pementasan selesai dengan sukses.',
-                style: TextStyle(fontSize: 11, color: AppColors.onTertiaryFixed, height: 1.35),
+                'Jaminan Pasti Tampil: DP Anda aman ditampung di rekening bersama Tarlink hingga pementasan selesai dengan sukses.',
+                style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.onTertiaryFixed, height: 1.35),
               ),
             ),
           ],
@@ -1354,17 +1375,17 @@ https://tarlingku.id/artis/${widget.artist.id}
               children: [
                 Text(
                   'Total ${_selectedPackage?.name ?? "Paket Pilihan"}:',
-                  style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   CurrencyFormatter.formatRupiah(price),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primary),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primary),
                 ),
                 Text(
                   'Tgl: ${_formatDate(_selectedDate, "dd MMM yyyy")}',
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.tertiary),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.tertiary),
                 ),
               ],
             ),
@@ -1380,7 +1401,7 @@ https://tarlingku.id/artis/${widget.artist.id}
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 elevation: 3,
               ),
-              icon: const Text('Pilih Paket & Booking', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              icon: Text('Pilih Paket & Booking', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
               label: const Icon(Icons.arrow_forward, size: 16),
               onPressed: _proceedBooking,
             ),

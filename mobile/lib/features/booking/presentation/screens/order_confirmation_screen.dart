@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 import '../../../voucher/data/models/evoucher_model.dart';
 import '../../../voucher/presentation/screens/evoucher_screen.dart';
 import '../../data/models/booking_model.dart';
@@ -128,36 +128,7 @@ TarlingKu • Mitra Seni Panggung Pantura
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppColors.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          children: [
-            SvgPicture.asset(
-              'assets/images/tarlingku_logo.svg',
-              height: 24,
-              placeholderBuilder: (_) => const Icon(Icons.music_note, color: AppColors.primary, size: 24),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TarlingKu',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                        letterSpacing: -0.5,
-                      ),
-                ),
-                Text(
-                  'Pesanan Saya',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                        fontSize: 11,
-                      ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        title: const TarlinkLogo(height: 26, showSubtitle: true),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 12),
