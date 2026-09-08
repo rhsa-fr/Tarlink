@@ -7,9 +7,8 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/main_shell_screen.dart';
 import '../../../../core/widgets/tarlink_logo.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import 'email_otp_verification_screen.dart';
 import 'forgot_password_screen.dart';
-import 'otp_verification_screen.dart';
-import 'register_screen.dart';
 
 class LoginOtpScreen extends StatefulWidget {
   const LoginOtpScreen({super.key});
@@ -18,27 +17,32 @@ class LoginOtpScreen extends StatefulWidget {
   State<LoginOtpScreen> createState() => _LoginOtpScreenState();
 }
 
-class _LoginOtpScreenState extends State<LoginOtpScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final _phoneCtrl = TextEditingController();
+class _LoginOtpScreenState extends State<LoginOtpScreen> {
+  bool _isLoginMode = true;
+
+  // Login fields
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-
-  bool _isLoading = false;
   bool _obscurePassword = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
+  // Register fields
+  final _regNameCtrl = TextEditingController();
+  final _regEmailCtrl = TextEditingController();
+  final _regPasswordCtrl = TextEditingController();
+  final _regConfirmCtrl = TextEditingController();
+  bool _obscureRegPassword = true;
+  bool _obscureRegConfirm = true;
+
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _tabController.dispose();
-    _phoneCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _regNameCtrl.dispose();
+    _regEmailCtrl.dispose();
+    _regPasswordCtrl.dispose();
+    _regConfirmCtrl.dispose();
     super.dispose();
   }
 
@@ -56,11 +60,9 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> with SingleTickerProvid
     }
 
     setState(() => _isLoading = true);
-
     try {
       final repo = AuthRepositoryImpl(SupabaseService.client);
       await repo.signInWithEmail(email, password);
-
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -75,35 +77,29 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> with SingleTickerProvid
     }
   }
 
-  Future<void> _handleSendPhoneOtp() async {
-    final phone = _phoneCtrl.text.trim();
-    if (phone.length < 9) {
-      _showError('Nomor HP tidak valid (minimal 10 digit)');
-      return;
-    }
+  Future<void> _handleRegister() async {
+    final name = _regNameCtrl.text.trim();
+    final email = _regEmailCtrl.text.trim();
+    final password = _regPasswordCtrl.text;
+    final confirm = _regConfirmCtrl.text;
+
+    if (name.isEmpty) { _showError('Nama lengkap harus diisi'); return; }
+    if (email.isEmpty || !email.contains('@')) { _showError('Email tidak valid'); return; }
+    if (password.length < 6) { _showError('Password minimal 6 karakter'); return; }
+    if (password != confirm) { _showError('Konfirmasi password tidak cocok'); return; }
 
     setState(() => _isLoading = true);
-
     try {
       final repo = AuthRepositoryImpl(SupabaseService.client);
-      await repo.signInWithPhoneOtp(phone);
-
+      await repo.signUpWithEmail(email, password, name);
       if (!mounted) return;
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => OtpVerificationScreen(phone: phone),
-        ),
+        MaterialPageRoute(builder: (_) => EmailOtpVerificationScreen(email: email)),
       );
-    } catch (_) {
-      // Local preview fallback
+    } catch (e) {
       if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OtpVerificationScreen(phone: phone),
-        ),
-      );
+      _showError('Pendaftaran gagal: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -140,40 +136,135 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> with SingleTickerProvid
       backgroundColor: AppColors.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-              // Logo & Brand
+              // Logo
               const Center(
-                child: TarlinkLogo(height: 44, showSubtitle: true),
+                child: TarlinkLogo(height: 40, showSubtitle: true),
               ),
               const SizedBox(height: 20),
 
               // Heading
               Text(
-                'Selamat Datang',
+                _isLoginMode ? 'Selamat Datang' : 'Buat Akun Baru',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
-                'Pasar Seni Pertunjukan Pantura Terpercaya',
+                _isLoginMode
+                    ? 'Masuk ke akun Tarlink Anda'
+                    : 'Bergabung sebagai pelanggan Tarlink',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-              // Google Sign-In Button (Prominent)
+              // Segmented Toggle: Masuk / Daftar
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isLoginMode = true),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _isLoginMode ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: _isLoginMode
+                                ? const [BoxShadow(color: Color(0x0C22252A), blurRadius: 4, offset: Offset(0, 1))]
+                                : null,
+                          ),
+                          child: Text(
+                            'Masuk',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: _isLoginMode ? FontWeight.w700 : FontWeight.w500,
+                              color: _isLoginMode ? AppColors.primary : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isLoginMode = false),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: !_isLoginMode ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: !_isLoginMode
+                                ? const [BoxShadow(color: Color(0x0C22252A), blurRadius: 4, offset: Offset(0, 1))]
+                                : null,
+                          ),
+                          child: Text(
+                            'Daftar',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: !_isLoginMode ? FontWeight.w700 : FontWeight.w500,
+                              color: !_isLoginMode ? AppColors.primary : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Form Content
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: _isLoginMode ? _buildLoginForm() : _buildRegisterForm(),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Divider "ATAU"
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: AppColors.outlineVariant)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Text(
+                      'ATAU',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textMuted,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: Divider(color: AppColors.outlineVariant)),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Google Sign-In
               OutlinedButton(
                 onPressed: _isLoading ? null : _handleGoogleSignIn,
                 style: OutlinedButton.styleFrom(
@@ -205,177 +296,6 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> with SingleTickerProvid
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 22),
-
-              // Divider "ATAU"
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: AppColors.outlineVariant)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Text(
-                      'ATAU',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textMuted,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                  const Expanded(child: Divider(color: AppColors.outlineVariant)),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Custom Segmented Tabs (Email vs WhatsApp)
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x0C22252A), blurRadius: 4, offset: Offset(0, 1)),
-                    ],
-                  ),
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  labelStyle: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700),
-                  unselectedLabelStyle: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w500),
-                  tabs: const [
-                    Tab(text: 'Email'),
-                    Tab(text: 'Nomor WhatsApp'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Tab Views
-              SizedBox(
-                height: 240,
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // Tab 1: Email & Password
-                    Column(
-                      children: [
-                        AppTextField(
-                          label: 'Alamat Email',
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          hint: 'nama@email.com',
-                          prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
-                        ),
-                        const SizedBox(height: 12),
-                        AppTextField(
-                          label: 'Kata Sandi',
-                          controller: _passwordCtrl,
-                          obscureText: _obscurePassword,
-                          hint: 'Masukkan kata sandi',
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: AppColors.textMuted,
-                            ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                              );
-                            },
-                            child: Text(
-                              'Lupa Password?',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        AppButton(
-                          label: 'Masuk dengan Email',
-                          isLoading: _isLoading,
-                          onPressed: _handleEmailLogin,
-                        ),
-                      ],
-                    ),
-
-                    // Tab 2: WhatsApp / Phone OTP
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppTextField(
-                          label: 'Nomor WhatsApp / HP',
-                          controller: _phoneCtrl,
-                          keyboardType: TextInputType.phone,
-                          hint: 'Contoh: 081234567890',
-                          prefixIcon: const Icon(Icons.phone_android, color: AppColors.primary),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Kode OTP 6 digit akan dikirimkan via SMS / WhatsApp.',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        AppButton(
-                          label: 'Kirim Kode OTP',
-                          isLoading: _isLoading,
-                          onPressed: _handleSendPhoneOtp,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Register Call to action
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                    );
-                  },
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Belum punya akun? ',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: 'Daftar Sekarang',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -411,6 +331,119 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> with SingleTickerProvid
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLoginForm() {
+    return Column(
+      key: const ValueKey('login'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          label: 'Alamat Email',
+          controller: _emailCtrl,
+          keyboardType: TextInputType.emailAddress,
+          hint: 'nama@email.com',
+          prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
+        ),
+        const SizedBox(height: 14),
+        AppTextField(
+          label: 'Kata Sandi',
+          controller: _passwordCtrl,
+          obscureText: _obscurePassword,
+          hint: 'Masukkan kata sandi',
+          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              color: AppColors.textMuted,
+            ),
+            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
+            },
+            child: Text(
+              'Lupa Password?',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        AppButton(
+          label: 'Masuk',
+          isLoading: _isLoading,
+          onPressed: _handleEmailLogin,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterForm() {
+    return Column(
+      key: const ValueKey('register'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          label: 'Nama Lengkap',
+          controller: _regNameCtrl,
+          keyboardType: TextInputType.name,
+          hint: 'Nama lengkap Anda',
+          prefixIcon: const Icon(Icons.person_outline, color: AppColors.primary),
+        ),
+        const SizedBox(height: 14),
+        AppTextField(
+          label: 'Email',
+          controller: _regEmailCtrl,
+          keyboardType: TextInputType.emailAddress,
+          hint: 'nama@email.com',
+          prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
+        ),
+        const SizedBox(height: 14),
+        AppTextField(
+          label: 'Password',
+          controller: _regPasswordCtrl,
+          obscureText: _obscureRegPassword,
+          hint: 'Minimal 6 karakter',
+          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscureRegPassword ? Icons.visibility_off : Icons.visibility,
+              color: AppColors.textMuted,
+            ),
+            onPressed: () => setState(() => _obscureRegPassword = !_obscureRegPassword),
+          ),
+        ),
+        const SizedBox(height: 14),
+        AppTextField(
+          label: 'Konfirmasi Password',
+          controller: _regConfirmCtrl,
+          obscureText: _obscureRegConfirm,
+          hint: 'Ulangi password',
+          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscureRegConfirm ? Icons.visibility_off : Icons.visibility,
+              color: AppColors.textMuted,
+            ),
+            onPressed: () => setState(() => _obscureRegConfirm = !_obscureRegConfirm),
+          ),
+        ),
+        const SizedBox(height: 20),
+        AppButton(
+          label: 'Daftar Akun',
+          isLoading: _isLoading,
+          onPressed: _handleRegister,
+        ),
+      ],
     );
   }
 }

@@ -261,50 +261,28 @@ https://tarlingku.id/artis/${widget.artist.id}
       appBar: _buildStitchAppBar(context),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : Stack(
+          : Column(
               children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. Visual Header / Media Hero Section (Aspect 4:3)
-                      _buildHeroMediaSection(context),
-
-                      // 2. Headline & Geographical Reach
-                      _buildHeadlineSection(context, a),
-
-                      // 3. Audio Sample Preview Capsule (Moments of Delight)
-                      _buildAudioSampleCapsule(context),
-
-                      // 4. Troupe Narrative & Biography
-                      _buildBiographySection(context, a),
-
-                      // 5. Interactive Availability Date Picker Strip
-                      _buildAvailabilityStrip(context),
-
-                      // 6. Package & Pricing Selection Cards
-                      _buildPackagesSection(context),
-
-                      // 7. Troupe Stage Gallery Grid
-                      _buildGallerySection(context),
-
-                      // 8. Real Customer Testimonial Card
-                      _buildTestimonialSection(context),
-
-                      // 9. Trust Guarantee Banner
-                      _buildTrustGuaranteeBanner(context),
-                    ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeroMediaSection(context),
+                        _buildHeadlineSection(context, a),
+                        _buildAudioSampleCapsule(context),
+                        _buildBiographySection(context, a),
+                        _buildAvailabilityStrip(context),
+                        _buildPackagesSection(context),
+                        _buildGallerySection(context),
+                        _buildTestimonialSection(context),
+                        _buildTrustGuaranteeBanner(context),
+                      ],
+                    ),
                   ),
                 ),
-
-                // 10. Sticky Bottom Reservation & CTA Bar
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: _buildStickyBottomBar(context, currentPrice),
-                ),
+                _buildStickyBottomBar(context, currentPrice),
               ],
             ),
     );
