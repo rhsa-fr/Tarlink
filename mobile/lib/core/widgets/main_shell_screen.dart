@@ -74,11 +74,38 @@ class _MainShellScreenState extends State<MainShellScreen> {
       _currentIndex = 0;
     }
 
-    return FloatingChatBot(
-      child: Scaffold(
+    return Scaffold(
         body: IndexedStack(
           index: _currentIndex,
           children: screens,
+        ),
+        floatingActionButton: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.primary, Color(0xFF9B280E)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(9999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33BD4024),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(9999),
+              onTap: () => openChatBotSheet(context),
+              child: const Padding(
+                padding: EdgeInsets.all(14),
+                child: Icon(Icons.support_agent, size: 28, color: Colors.white),
+              ),
+            ),
+          ),
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
@@ -86,39 +113,38 @@ class _MainShellScreenState extends State<MainShellScreen> {
           indicatorColor: AppColors.primaryLight,
           destinations: [
             const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: AppColors.primaryDark),
+              icon: Icon(Icons.home_rounded),
+              selectedIcon: Icon(Icons.home_rounded, color: AppColors.primaryDark),
               label: 'Beranda',
             ),
             const NavigationDestination(
-              icon: Icon(Icons.search),
-              selectedIcon: Icon(Icons.search, color: AppColors.primaryDark),
+              icon: Icon(Icons.theater_comedy_outlined),
+              selectedIcon: Icon(Icons.theater_comedy_rounded, color: AppColors.primaryDark),
               label: 'Jelajah',
             ),
             const NavigationDestination(
-              icon: Icon(Icons.confirmation_number_outlined),
-              selectedIcon: Icon(Icons.confirmation_number, color: AppColors.primaryDark),
+              icon: Icon(Icons.receipt_long_outlined),
+              selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.primaryDark),
               label: 'Pesanan',
             ),
             const NavigationDestination(
               icon: Icon(Icons.storefront_outlined),
-              selectedIcon: Icon(Icons.storefront, color: AppColors.primaryDark),
+              selectedIcon: Icon(Icons.storefront_rounded, color: AppColors.primaryDark),
               label: 'Lapak Grup',
             ),
             if (_isAdmin)
               const NavigationDestination(
                 icon: Icon(Icons.admin_panel_settings_outlined),
-                selectedIcon: Icon(Icons.admin_panel_settings, color: AppColors.primaryDark),
+                selectedIcon: Icon(Icons.admin_panel_settings_rounded, color: AppColors.primaryDark),
                 label: 'Panel Pasar',
               ),
             const NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: AppColors.primaryDark),
+              icon: Icon(Icons.account_circle_outlined),
+              selectedIcon: Icon(Icons.account_circle_rounded, color: AppColors.primaryDark),
               label: 'Akun',
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

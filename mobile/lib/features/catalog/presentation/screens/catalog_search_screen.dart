@@ -10,6 +10,7 @@ import '../../domain/repositories/catalog_repository.dart';
 import 'artist_detail_screen.dart';
 import '../../../auth/presentation/screens/account_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 
 class CatalogSearchScreen extends StatefulWidget {
   final CatalogRepository? repository;
@@ -49,8 +50,19 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.initialCategory ?? '';
+    _selectedCategory = _normalizeCategory(widget.initialCategory ?? '');
     _loadArtists();
+  }
+
+  @override
+  void didUpdateWidget(covariant CatalogSearchScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialCategory != oldWidget.initialCategory) {
+      setState(() {
+        _selectedCategory = _normalizeCategory(widget.initialCategory ?? '');
+      });
+      _applyLocalFilters();
+    }
   }
 
   @override
@@ -59,22 +71,47 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
     super.dispose();
   }
 
+  String _normalizeCategory(String? cat) {
+    if (cat == null || cat.isEmpty) return '';
+    final lower = cat.toLowerCase().trim().replaceAll('_', '-');
+    if (lower == 'sandiwara' || lower.contains('sandiwara')) return 'sandiwara-full';
+    if (lower.contains('dangdut') || lower.contains('tarling-dangdut')) return 'tarling-dangdut';
+    if (lower.contains('organ')) return 'organ-tunggal';
+    if (lower.contains('klasik')) return 'tarling-klasik';
+    if (lower.contains('biduan') || lower.contains('sinden')) return 'biduan-solo';
+    if (lower.contains('mc') || lower.contains('pranata')) return 'mc-pranatacara';
+    return lower;
+  }
+
   Future<void> _loadArtists() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final cityFilter = (_selectedCity == null || _selectedCity == 'Semua Kota') ? null : _selectedCity;
-      final categoryFilter = (_selectedCategory == null || _selectedCategory!.isEmpty) ? null : _selectedCategory;
-
       final repo = widget.repository ?? CatalogRepositoryImpl(SupabaseService.client);
-      final results = await repo.searchArtists(
-        city: cityFilter,
-        category: categoryFilter,
-        maxBudget: _maxBudget,
-        availableDate: _selectedDate,
-      );
-      _allArtists = results;
+      final results = await repo.searchArtists();
+
+      final Set<String> seenIds = {};
+      final Set<String> seenNames = {};
+      final List<ArtistProfileModel> combined = [];
+
+      for (final a in results) {
+        final nameKey = a.displayName.toLowerCase().trim();
+        if (seenIds.add(a.id) && seenNames.add(nameKey)) {
+          combined.add(a);
+        }
+      }
+
+      for (final m in _getMockArtists()) {
+        final nameKey = m.displayName.toLowerCase().trim();
+        if (!seenIds.contains(m.id) && !seenNames.contains(nameKey)) {
+          seenIds.add(m.id);
+          seenNames.add(nameKey);
+          combined.add(m);
+        }
+      }
+
+      _allArtists = combined.isNotEmpty ? combined : _getMockArtists();
     } catch (_) {
-      // Mock fallback data for preview if backend offline
       _allArtists = _getMockArtists();
     } finally {
       _applyLocalFilters();
@@ -91,17 +128,29 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
         final matchName = a.displayName.toLowerCase().contains(query);
         final matchCity = a.baseCity.toLowerCase().contains(query);
         final matchCat = a.categoryDisplay.toLowerCase().contains(query);
+        final matchCatRaw = a.category.toLowerCase().contains(query);
         final matchDist = (a.baseDistrict ?? '').toLowerCase().contains(query);
-        return matchName || matchCity || matchCat || matchDist;
+        final matchDesc = (a.description ?? '').toLowerCase().contains(query);
+        final matchCoverage = a.coverageCities.any((c) => c.toLowerCase().contains(query));
+        return matchName || matchCity || matchCat || matchCatRaw || matchDist || matchDesc || matchCoverage;
       }).toList();
     }
 
     if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
-      list = list.where((a) => a.category == _selectedCategory).toList();
+      final targetCat = _normalizeCategory(_selectedCategory);
+      list = list.where((a) {
+        final aCat = _normalizeCategory(a.category);
+        return aCat == targetCat || a.category == _selectedCategory;
+      }).toList();
     }
 
     if (_selectedCity != null && _selectedCity != 'Semua Kota') {
-      list = list.where((a) => a.baseCity.toLowerCase() == _selectedCity!.toLowerCase()).toList();
+      final cityLower = _selectedCity!.toLowerCase();
+      list = list.where((a) {
+        final matchBase = a.baseCity.toLowerCase() == cityLower;
+        final matchCoverage = a.coverageCities.any((c) => c.toLowerCase() == cityLower);
+        return matchBase || matchCoverage;
+      }).toList();
     }
 
     if (_maxBudget != null && _maxBudget! > 0) {
@@ -408,36 +457,7 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Image.network(
-                    'https://lh3.googleusercontent.com/aida/AEtjO1U9hAdtIEYquHeUCRgPfhZxGBsHOmAADGKpUOXlxxQrh71SIu4_wShAts8QS54rNh23MrcZskE3M6ov5AqlwCDdrVDAf8vhR4voMYu0xLS7UWbhOf4osQiDXN3BUD4MQqOZV9xWkMVSFbg2QXmUjJ2y8T4oh0kKR2zin028bWLi131L8boqGFHiNQmDTm4ms-s7VczNNJV4WtCodTDn2hxkXdpV-RGjorU7nkzSI7HdIOm6l9qDCeDruOK1',
-                    height: 32,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary, size: 28),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'TarlingKu',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                          height: 1.1,
-                        ),
-                      ),
-                      Text(
-                        'Pencarian & Filter',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.04 * 10,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const TarlinkLogo(height: 28),
                   const Spacer(),
                   // Lokasi Pill
                   Container(
@@ -474,9 +494,8 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
                     },
                     child: const CircleAvatar(
                       radius: 16,
-                      backgroundImage: NetworkImage(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuDQzv_Dk0O_iXgTvC2fX5q2Ra5nMhk0V6gWLe22OVFVSbSF0uGiICiPoi-UUFv3veiiDLTJqejkCV4MCYKOKOJIUQn5K7h-ZJiGYo7mc8JnjyW6UE3Usc7hl38gAlBlVRASmzj85_FjCpyZw974XN_6-cw2aiGefOM5C2Dh92yexki3Qf4kyaDjbFo8RAQx-uq3P-CNFjPKCjR2GOEWbfp5wUoP_srtQpXwtk4lJdwcTi8sa7Hp5MXosw',
-                      ),
+                      backgroundColor: AppColors.primaryLight,
+                      child: Icon(Icons.person, size: 18, color: AppColors.primary),
                     ),
                   ),
                 ],
@@ -823,43 +842,71 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
           // Listing Cards Feed
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : _filteredArtists.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    ? RefreshIndicator(
+                        onRefresh: _loadArtists,
+                        color: AppColors.primary,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           children: [
-                            const Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+                            const Center(
+                              child: Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
+                            ),
                             const SizedBox(height: 12),
-                            Text(
-                              'Tidak ada grup yang sesuai filter',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w600),
+                            Center(
+                              child: Text(
+                                'Tidak ada grup yang sesuai filter',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
                             ),
                             const SizedBox(height: 8),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _searchCtrl.clear();
-                                  _selectedCategory = '';
-                                  _selectedCity = 'Semua Kota';
-                                  _selectedDate = null;
-                                  _maxBudget = null;
-                                  _onlyDp20 = false;
-                                });
-                                _applyLocalFilters();
-                              },
-                              child: const Text('Reset Semua Filter'),
+                            Center(
+                              child: Text(
+                                'Coba ubah kata kunci atau reset filter pencarian',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                ),
+                                icon: const Icon(Icons.refresh, size: 18),
+                                label: const Text('Reset Semua Filter'),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchCtrl.clear();
+                                    _selectedCategory = '';
+                                    _selectedCity = 'Semua Kota';
+                                    _selectedDate = null;
+                                    _maxBudget = null;
+                                    _onlyDp20 = false;
+                                  });
+                                  _applyLocalFilters();
+                                },
+                              ),
                             ),
                           ],
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: _filteredArtists.length,
-                        itemBuilder: (context, index) {
-                          final artist = _filteredArtists[index];
-                          return _buildStitchArtistCard(artist, index);
-                        },
+                    : RefreshIndicator(
+                        onRefresh: _loadArtists,
+                        color: AppColors.primary,
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          itemCount: _filteredArtists.length,
+                          itemBuilder: (context, index) {
+                            final artist = _filteredArtists[index];
+                            return _buildStitchArtistCard(artist, index);
+                          },
+                        ),
                       ),
           ),
         ],
@@ -1168,12 +1215,12 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
                 const SizedBox(height: 8),
 
                 // Specs Pills
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
                   children: [
                     _buildSpecChip('24 Personil'),
-                    const SizedBox(width: 6),
                     _buildSpecChip('Sound 15.000W'),
-                    const SizedBox(width: 6),
                     _buildSpecChip('Bisa DP 20%'),
                   ],
                 ),
@@ -1261,14 +1308,16 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
   }
 
   List<ArtistProfileModel> _getMockArtists() {
-    return [
-      const ArtistProfileModel(
+    return const [
+      ArtistProfileModel(
         id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
         userId: '11111111-1111-4111-a111-111111111111',
         displayName: 'Sandiwara Dharma Kudeta',
         category: 'sandiwara-full',
         baseCity: 'Indramayu',
         baseDistrict: 'Kandanghaur',
+        coverageCities: ['Indramayu', 'Subang', 'Cirebon', 'Majalengka'],
+        description: 'Grup Sandiwara legendaris Pantura pimpinan H. Waryono. Membawakan lakon babad Dermayu, bodoran khas Pantura, dan panggung megah tata lampu modern.',
         ratingAvg: 4.9,
         totalJob: 148,
         priceMin: 9500000,
@@ -1276,13 +1325,15 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
         rawPhone: '081234567801',
         autoAccept: true,
       ),
-      const ArtistProfileModel(
+      ArtistProfileModel(
         id: 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb',
         userId: '22222222-2222-4222-a222-222222222222',
         displayName: 'Sandiwara Candra Kirana',
         category: 'sandiwara-full',
         baseCity: 'Cirebon',
         baseDistrict: 'Gegesik',
+        coverageCities: ['Cirebon', 'Indramayu', 'Kuningan', 'Majalengka'],
+        description: 'Sanggar Sandiwara klasik Cirebonan dengan alunan gamelan laras slendro murni, lakon purwa, dan busana wayang wong megah.',
         ratingAvg: 4.8,
         totalJob: 112,
         priceMin: 11000000,
@@ -1290,13 +1341,15 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
         rawPhone: '081234567802',
         autoAccept: false,
       ),
-      const ArtistProfileModel(
+      ArtistProfileModel(
         id: 'cccccccc-cccc-4ccc-cccc-cccccccccccc',
         userId: '33333333-3333-4333-a333-333333333333',
         displayName: 'Tarling Dangdut Hj. Dewi Kirana',
         category: 'tarling-dangdut',
         baseCity: 'Indramayu',
         baseDistrict: 'Jatibarang',
+        coverageCities: ['Indramayu', 'Cirebon', 'Majalengka', 'Subang'],
+        description: 'Ratu Tarling Dangdut Pantura Hj. Dewi Kirana dengan lagu-lagu hits legendaris, sound system horeg pantura, dan deretan biduan papan atas.',
         ratingAvg: 4.9,
         totalJob: 215,
         priceMin: 7000000,
@@ -1304,13 +1357,15 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
         rawPhone: '081234567803',
         autoAccept: true,
       ),
-      const ArtistProfileModel(
+      ArtistProfileModel(
         id: 'dddddddd-dddd-4ddd-dddd-dddddddddddd',
         userId: '44444444-4444-4444-a444-444444444444',
         displayName: 'Organ Tunggal Rolani Diva',
         category: 'organ-tunggal',
         baseCity: 'Cirebon',
         baseDistrict: 'Arjawinangun',
+        coverageCities: ['Cirebon', 'Indramayu', 'Majalengka'],
+        description: 'Sajian Organ Tunggal Pantura modern, keyboardis virtuoso Mas Rolani dengan 3 biduan cantik dan sound system 5000 watt jernih.',
         ratingAvg: 4.7,
         totalJob: 89,
         priceMin: 2200000,
@@ -1318,18 +1373,68 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
         rawPhone: '081234567804',
         autoAccept: true,
       ),
-      const ArtistProfileModel(
+      ArtistProfileModel(
         id: 'eeeeeeee-eeee-4eee-eeee-eeeeeeeeeeee',
         userId: '55555555-5555-4555-a555-555555555555',
         displayName: 'Sindy Puspita (Biduan & MC)',
         category: 'biduan-solo',
         baseCity: 'Indramayu',
         baseDistrict: 'Karangampel',
+        coverageCities: ['Indramayu', 'Cirebon'],
+        description: 'Bintang tamu penyanyi solo tarling kenthrung & dangdut Pantura, merangkap MC pembawa acara hajatan pengantin & sunatan.',
         ratingAvg: 4.8,
         totalJob: 45,
         priceMin: 1500000,
         priceMax: 1500000,
         rawPhone: '081234567805',
+        autoAccept: true,
+      ),
+      ArtistProfileModel(
+        id: 'ffffffff-ffff-4fff-ffff-ffffffffffff',
+        userId: '66666666-6666-4666-a666-666666666666',
+        displayName: 'Dian Anic & Anica Nada',
+        category: 'tarling-dangdut',
+        baseCity: 'Indramayu',
+        baseDistrict: 'Jatibarang',
+        coverageCities: ['Indramayu', 'Cirebon', 'Subang', 'Majalengka', 'Kuningan'],
+        description: 'Diva Tarling Dangdut Pantura Dian Anic bersama orkes Anica Nada, membawakan lagu hits Pantura dan aransemen panggung spektakuler.',
+        ratingAvg: 4.9,
+        totalJob: 340,
+        priceMin: 18500000,
+        priceMax: 28000000,
+        rawPhone: '081234567806',
+        autoAccept: true,
+      ),
+      ArtistProfileModel(
+        id: '01010101-0101-4101-a101-010101010101',
+        userId: '77777777-7777-4777-a777-777777777777',
+        displayName: 'Susi Arzety - Nada Cantika',
+        category: 'tarling-dangdut',
+        baseCity: 'Cirebon',
+        baseDistrict: 'Kedawung',
+        coverageCities: ['Cirebon', 'Indramayu', 'Kuningan', 'Majalengka'],
+        description: 'Pentas live Dangdut Tarling Nada Cantika pimpinan Susi Arzety, melayani hajatan akbar dengan panggung rigging dan sound horeg.',
+        ratingAvg: 4.8,
+        totalJob: 215,
+        priceMin: 15000000,
+        priceMax: 24000000,
+        rawPhone: '081234567807',
+        autoAccept: true,
+      ),
+      ArtistProfileModel(
+        id: '02020202-0202-4202-a202-020202020202',
+        userId: '88888888-8888-4888-a888-888888888888',
+        displayName: 'Wa Kancil Klasik Tarling',
+        category: 'tarling-klasik',
+        baseCity: 'Indramayu',
+        baseDistrict: 'Karangampel',
+        coverageCities: ['Indramayu', 'Cirebon', 'Majalengka'],
+        description: 'Alunan Tarling Klasik Dermayon asli dengan petikan gitar akustik, suling miring, dan sinden sepuh khas Pantura tempo dulu.',
+        ratingAvg: 4.9,
+        totalJob: 180,
+        priceMin: 8000000,
+        priceMax: 14000000,
+        rawPhone: '081234567808',
         autoAccept: true,
       ),
     ];

@@ -21,60 +21,35 @@ class _FloatingChatBotState extends State<FloatingChatBot> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const _ChatBotSheet(),
+      builder: (_) => const ChatBotSheet(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        widget.child,
-        Positioned(
-          bottom: 20,
-          right: 20,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(9999),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33BD4024),
-                  blurRadius: 14,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(9999),
-                onTap: _openChatSheet,
-                child: const Padding(
-                  padding: EdgeInsets.all(14),
-                  child: Icon(Icons.support_agent, size: 28, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+    return widget.child;
   }
+
+  void openChat() => _openChatSheet();
 }
 
-class _ChatBotSheet extends StatefulWidget {
-  const _ChatBotSheet();
+void openChatBotSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const ChatBotSheet(),
+  );
+}
+
+class ChatBotSheet extends StatefulWidget {
+  const ChatBotSheet({super.key});
 
   @override
-  State<_ChatBotSheet> createState() => _ChatBotSheetState();
+  State<ChatBotSheet> createState() => _ChatBotSheetState();
 }
 
-class _ChatBotSheetState extends State<_ChatBotSheet> {
+class _ChatBotSheetState extends State<ChatBotSheet> {
   final _inputCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
   final List<BotMessageModel> _messages = [

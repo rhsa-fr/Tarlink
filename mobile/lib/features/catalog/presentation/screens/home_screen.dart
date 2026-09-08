@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final results = await repo.searchArtists();
       if (mounted) {
         setState(() {
-          _artists = results;
+          _artists = results.isNotEmpty ? results : _mockArtists();
           _isLoading = false;
         });
       }
@@ -64,34 +64,43 @@ class _HomeScreenState extends State<HomeScreen> {
         id: 'mock-1',
         userId: 'u-1',
         displayName: 'Dian Anic & Anica Nada',
-        category: 'Tarling Dangdut Modern',
+        category: 'tarling-dangdut',
         baseCity: 'Indramayu',
         baseDistrict: 'Jatibarang',
+        coverageCities: ['Indramayu', 'Cirebon', 'Subang', 'Majalengka', 'Kuningan'],
         priceMin: 18500000,
+        priceMax: 28000000,
         ratingAvg: 4.9,
         totalJob: 340,
+        autoAccept: true,
       ),
       ArtistProfileModel(
         id: 'mock-2',
         userId: 'u-2',
         displayName: 'Susi Arzety - Nada Cantika',
-        category: 'Tarling Dangdut Kombinasi',
+        category: 'tarling-dangdut',
         baseCity: 'Cirebon',
         baseDistrict: 'Kedawung',
+        coverageCities: ['Cirebon', 'Indramayu', 'Kuningan', 'Majalengka'],
         priceMin: 15000000,
+        priceMax: 24000000,
         ratingAvg: 4.8,
         totalJob: 215,
+        autoAccept: true,
       ),
       ArtistProfileModel(
         id: 'mock-3',
         userId: 'u-3',
         displayName: 'Wa Kancil Klasik Tarling',
-        category: 'Tarling Klasik Asli',
+        category: 'tarling-klasik',
         baseCity: 'Indramayu',
         baseDistrict: 'Karangampel',
-        priceMin: 12000000,
+        coverageCities: ['Indramayu', 'Cirebon'],
+        priceMin: 8000000,
+        priceMax: 14000000,
         ratingAvg: 4.9,
         totalJob: 180,
+        autoAccept: true,
       ),
     ];
   }
@@ -477,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'icon': Icons.favorite,
         'color': AppColors.primary,
         'bg': AppColors.primaryLight,
-        'slug': 'sandiwara',
+        'slug': 'sandiwara-full',
       },
       {
         'title': 'Khitanan',
@@ -485,7 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'icon': Icons.child_friendly,
         'color': AppColors.secondaryDark,
         'bg': AppColors.secondaryLight,
-        'slug': 'tarling_dangdut',
+        'slug': 'tarling-dangdut',
       },
       {
         'title': 'Syukuran',
@@ -493,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'icon': Icons.cake,
         'color': AppColors.tertiary,
         'bg': AppColors.tertiaryContainer.withValues(alpha: 0.25),
-        'slug': 'organ_tunggal',
+        'slug': 'organ-tunggal',
       },
       {
         'title': 'Panggung',
@@ -501,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'icon': Icons.speaker_group,
         'color': const Color(0xFF22252A),
         'bg': AppColors.surfaceContainerHigh,
-        'slug': 'wayang_kulit',
+        'slug': 'biduan-solo',
       },
     ];
 
