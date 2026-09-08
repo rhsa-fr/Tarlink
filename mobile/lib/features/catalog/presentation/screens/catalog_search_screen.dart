@@ -10,6 +10,7 @@ import '../../domain/repositories/catalog_repository.dart';
 import 'artist_detail_screen.dart';
 import '../../../auth/presentation/screens/account_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 
 class CatalogSearchScreen extends StatefulWidget {
   final CatalogRepository? repository;
@@ -94,10 +95,6 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
         final matchDist = (a.baseDistrict ?? '').toLowerCase().contains(query);
         return matchName || matchCity || matchCat || matchDist;
       }).toList();
-    }
-
-    if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
-      list = list.where((a) => a.category == _selectedCategory).toList();
     }
 
     if (_selectedCity != null && _selectedCity != 'Semua Kota') {
@@ -408,36 +405,7 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Image.network(
-                    'https://lh3.googleusercontent.com/aida/AEtjO1U9hAdtIEYquHeUCRgPfhZxGBsHOmAADGKpUOXlxxQrh71SIu4_wShAts8QS54rNh23MrcZskE3M6ov5AqlwCDdrVDAf8vhR4voMYu0xLS7UWbhOf4osQiDXN3BUD4MQqOZV9xWkMVSFbg2QXmUjJ2y8T4oh0kKR2zin028bWLi131L8boqGFHiNQmDTm4ms-s7VczNNJV4WtCodTDn2hxkXdpV-RGjorU7nkzSI7HdIOm6l9qDCeDruOK1',
-                    height: 32,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary, size: 28),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'TarlingKu',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                          height: 1.1,
-                        ),
-                      ),
-                      Text(
-                        'Pencarian & Filter',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.04 * 10,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const TarlinkLogo(height: 28),
                   const Spacer(),
                   // Lokasi Pill
                   Container(
@@ -555,7 +523,7 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
                           borderRadius: BorderRadius.circular(9999),
                           onTap: () {
                             setState(() => _selectedCategory = isSelected ? '' : cat['slug']);
-                            _applyLocalFilters();
+                            _loadArtists();
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),

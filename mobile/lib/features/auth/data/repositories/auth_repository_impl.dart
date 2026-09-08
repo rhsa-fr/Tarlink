@@ -58,8 +58,74 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> signInWithGoogle() async {
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'io.supabase.tarlingbook://login-callback/',
+      redirectTo: 'io.supabase.tarlink://login-callback/',
     );
+  }
+
+  @override
+  Future<void> signUpWithEmail(String email, String password, String name) async {
+    await _client.auth.signUp(
+      email: email,
+      password: password,
+      data: {'name': name, 'full_name': name},
+    );
+  }
+
+  @override
+  Future<void> signInWithEmail(String email, String password) async {
+    await _client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+  }
+
+  @override
+  Future<UserModel> verifyEmailOtp(String email, String token) async {
+    final res = await _client.auth.verifyOTP(
+      email: email,
+      token: token,
+      type: OtpType.email,
+    );
+
+    final user = res.user;
+    if (user == null) {
+      throw const AuthException('Verifikasi gagal: User tidak ditemukan');
+    }
+
+    final data = await _client
+        .from(SupabaseConstants.tableUsers)
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (data != null) {
+      return UserModel.fromJson(data);
+    }
+
+    final fullName = user.userMetadata?['full_name'] as String? ??
+        user.userMetadata?['name'] as String? ??
+        'Pengguna Pantura';
+
+    final newProfile = {
+      'id': user.id,
+      'email': email,
+      'name': fullName,
+      'role': 'customer',
+      'is_verified': true,
+    };
+
+    final inserted = await _client
+        .from(SupabaseConstants.tableUsers)
+        .upsert(newProfile)
+        .select()
+        .single();
+
+    return UserModel.fromJson(inserted);
+  }
+
+  @override
+  Future<void> resetPassword(String email) async {
+    await _client.auth.resetPasswordForEmail(email);
   }
 
   @override
