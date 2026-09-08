@@ -74,11 +74,38 @@ class _MainShellScreenState extends State<MainShellScreen> {
       _currentIndex = 0;
     }
 
-    return FloatingChatBot(
-      child: Scaffold(
+    return Scaffold(
         body: IndexedStack(
           index: _currentIndex,
           children: screens,
+        ),
+        floatingActionButton: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.primary, Color(0xFF9B280E)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(9999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33BD4024),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(9999),
+              onTap: () => openChatBotSheet(context),
+              child: const Padding(
+                padding: EdgeInsets.all(14),
+                child: Icon(Icons.support_agent, size: 28, color: Colors.white),
+              ),
+            ),
+          ),
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
@@ -118,7 +145,6 @@ class _MainShellScreenState extends State<MainShellScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
