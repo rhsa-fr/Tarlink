@@ -31,8 +31,8 @@ class _FloatingChatBotState extends State<FloatingChatBot> {
       children: [
         widget.child,
         Positioned(
-          bottom: 20,
-          right: 20,
+          bottom: 88,
+          right: 16,
           child: Container(
             decoration: BoxDecoration(
               gradient: const LinearGradient(

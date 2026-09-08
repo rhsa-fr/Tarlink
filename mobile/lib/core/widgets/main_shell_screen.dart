@@ -86,34 +86,34 @@ class _MainShellScreenState extends State<MainShellScreen> {
           indicatorColor: AppColors.primaryLight,
           destinations: [
             const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: AppColors.primaryDark),
+              icon: Icon(Icons.home_rounded),
+              selectedIcon: Icon(Icons.home_rounded, color: AppColors.primaryDark),
               label: 'Beranda',
             ),
             const NavigationDestination(
-              icon: Icon(Icons.search),
-              selectedIcon: Icon(Icons.search, color: AppColors.primaryDark),
+              icon: Icon(Icons.theater_comedy_outlined),
+              selectedIcon: Icon(Icons.theater_comedy_rounded, color: AppColors.primaryDark),
               label: 'Jelajah',
             ),
             const NavigationDestination(
-              icon: Icon(Icons.confirmation_number_outlined),
-              selectedIcon: Icon(Icons.confirmation_number, color: AppColors.primaryDark),
+              icon: Icon(Icons.receipt_long_outlined),
+              selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.primaryDark),
               label: 'Pesanan',
             ),
             const NavigationDestination(
               icon: Icon(Icons.storefront_outlined),
-              selectedIcon: Icon(Icons.storefront, color: AppColors.primaryDark),
+              selectedIcon: Icon(Icons.storefront_rounded, color: AppColors.primaryDark),
               label: 'Lapak Grup',
             ),
             if (_isAdmin)
               const NavigationDestination(
                 icon: Icon(Icons.admin_panel_settings_outlined),
-                selectedIcon: Icon(Icons.admin_panel_settings, color: AppColors.primaryDark),
+                selectedIcon: Icon(Icons.admin_panel_settings_rounded, color: AppColors.primaryDark),
                 label: 'Panel Pasar',
               ),
             const NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: AppColors.primaryDark),
+              icon: Icon(Icons.account_circle_outlined),
+              selectedIcon: Icon(Icons.account_circle_rounded, color: AppColors.primaryDark),
               label: 'Akun',
             ),
           ],
