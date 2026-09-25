@@ -23,7 +23,7 @@ class PackageModel {
       artistId: json['artist_id'] as String,
       name: json['name'] as String,
       durationHours: json['duration_hours'] as int?,
-      price: json['price'] as int,
+      price: json['price'] as int? ?? 0,
       includes: json['includes'] as String?,
       isActive: json['is_active'] as bool? ?? true,
     );

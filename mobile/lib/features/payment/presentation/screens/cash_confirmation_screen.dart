@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -50,7 +49,7 @@ class _CashConfirmationScreenState extends State<CashConfirmationScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final repo = BookingRepositoryImpl(SupabaseService.client);
+      final repo = BookingRepositoryImpl();
       final amount = int.tryParse(_amountCtrl.text.trim()) ?? widget.remainingCashAmount;
       final photoUrl = _simulatedPhotoUrl ?? 'https://storage.tarlingbook.id/cash-receipts/mock-kwitansi.jpg';
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/main_shell_screen.dart';
@@ -40,7 +39,7 @@ class _EmailOtpVerificationScreenState extends State<EmailOtpVerificationScreen>
     setState(() => _isLoading = true);
 
     try {
-      final repo = AuthRepositoryImpl(SupabaseService.client);
+      final repo = AuthRepositoryImpl();
       await repo.verifyEmailOtp(widget.email, token);
 
       if (!mounted) return;
@@ -61,7 +60,7 @@ class _EmailOtpVerificationScreenState extends State<EmailOtpVerificationScreen>
 
   Future<void> _handleResend() async {
     try {
-      final repo = AuthRepositoryImpl(SupabaseService.client);
+      final repo = AuthRepositoryImpl();
       await repo.resetPassword(widget.email);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

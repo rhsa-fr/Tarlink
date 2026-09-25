@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 import '../../../payment/presentation/screens/cash_confirmation_screen.dart';
 import '../../../payment/presentation/screens/snap_payment_screen.dart';
 import '../../../voucher/data/models/evoucher_model.dart';
@@ -37,103 +38,42 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   Future<void> _loadBookings() async {
     setState(() => _isLoading = true);
     try {
-      final repo = BookingRepositoryImpl(SupabaseService.client);
-      final userId = SupabaseService.client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
+      final repo = BookingRepositoryImpl();
+      final userId = AuthSession.currentUserId;
       final list = await repo.getCustomerBookings(userId);
-      setState(() => _bookings = list);
+      if (mounted) {
+        setState(() {
+          _bookings = list;
+          _isLoading = false;
+        });
+      }
     } catch (_) {
-      // Mock data matching Stitch design spec
-      setState(() {
-        _bookings = [
-          BookingModel(
-            id: 'b-01',
-            code: 'TRG-20251115-8892',
-            customerId: 'c1',
-            artistId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
-            packageId: 'p1',
-            eventDate: DateTime.now().add(const Duration(days: 8)),
-            venueAddress: 'Jl. Sunan Gunung Jati No. 45, Gunungjati, Cirebon',
-            city: 'Cirebon',
-            district: 'Gunungjati',
-            totalPrice: 25000000,
-            dpAmount: 5000000,
-            remainingAmount: 20000000,
-            status: 'DP_PAID',
-            bookingType: 'instant',
-            evoucherCode: 'VCHR-TRG-20251115-8892',
-          ),
-          BookingModel(
-            id: 'b-02',
-            code: 'TRG-20251228-4412',
-            customerId: 'c1',
-            artistId: 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb',
-            packageId: 'p2',
-            eventDate: DateTime.now().add(const Duration(days: 21)),
-            venueAddress: 'Desa Kedawung RT 04/RW 02, Kedawung, Cirebon',
-            city: 'Cirebon',
-            district: 'Kedawung',
-            totalPrice: 15000000,
-            dpAmount: 3000000,
-            remainingAmount: 12000000,
-            status: 'WAITING_DP',
-            bookingType: 'instant',
-          ),
-          BookingModel(
-            id: 'b-03',
-            code: 'TK-88219',
-            customerId: 'c1',
-            artistId: 'cccccccc-cccc-4ccc-cccc-cccccccccccc',
-            packageId: 'p3',
-            eventDate: DateTime.now().subtract(const Duration(days: 28)),
-            venueAddress: 'Blok Manis, Jatibarang, Indramayu',
-            city: 'Indramayu',
-            district: 'Jatibarang',
-            totalPrice: 18500000,
-            dpAmount: 3700000,
-            remainingAmount: 14800000,
-            status: 'COMPLETED',
-            bookingType: 'instant',
-          ),
-        ];
-      });
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  List<BookingModel> get _akanDatangBookings {
-    return _bookings.where((b) => b.status == 'WAITING_DP' || b.status == 'DP_PAID' || b.status == 'ONGOING' || b.status == 'PENDING').toList();
-  }
+  List<BookingModel> get _akanDatangBookings => _bookings
+      .where((b) =>
+          b.status == 'PENDING' ||
+          b.status == 'WAITING_DP' ||
+          b.status == 'APPROVED' ||
+          b.status == 'DP_PAID' ||
+          b.status == 'PARTIAL_PAID' ||
+          b.status == 'ONGOING')
+      .toList();
 
-  List<BookingModel> get _selesaiBookings {
-    return _bookings.where((b) => b.status == 'COMPLETED' || b.status == 'FULL_PAID').toList();
-  }
+  List<BookingModel> get _selesaiBookings => _bookings
+      .where((b) => b.status == 'COMPLETED' || b.status == 'FULL_PAID')
+      .toList();
 
-  List<BookingModel> get _batalBookings {
-    return _bookings.where((b) => b.status == 'CANCELLED' || b.status == 'EXPIRED').toList();
-  }
+  List<BookingModel> get _batalBookings => _bookings
+      .where((b) => b.status == 'CANCELLED' || b.status == 'REFUNDED' || b.status == 'EXPIRED')
+      .toList();
 
   String _formatDate(DateTime dt) {
-    try {
-      return DateFormat('EEEE, dd MMM yyyy', 'id_ID').format(dt);
-    } catch (_) {
-      return '${dt.day} ${_monthName(dt.month)} ${dt.year}';
-    }
-  }
-
-  String _monthName(int m) {
-    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    return (m >= 1 && m <= 12) ? months[m] : '';
-  }
-
-  String _getArtistImage(String? code) {
-    if (code != null && code.contains('8892')) {
-      return 'https://lh3.googleusercontent.com/aida-public/AB6AXuBp0NAD-PYrOt8OxsLU5TIRruCM-gz1WkTPwIGh9wlKmRvyHYg_-iUYYLwET9XTEsuiqt6AwtSnZ7nosJj-C2po1MLUaM9rk4biUzcAwQltiQe3q69jgWkKO539FLB4NCWDfxKRTHH7InxDzRa8Xq5qLnFbbyMEc2E9MgUIyj32RbfS-OCaF859BDaiS_717F7GE_tRn_Jm-RDnW5TJhOb54G01cHrPvz--gHrGOOz45e00Mly7D9TwYQ';
-    }
-    if (code != null && code.contains('4412')) {
-      return 'https://lh3.googleusercontent.com/aida-public/AB6AXuCW4wRN2RNrJEApg1lu4bfBqu3HOZUi2BeWWCk8A1GfOvjg917NPSWh5dOTbinw5FYMyJ71uuIc3CPyyahfrAQdh7scB8jABNmTpfvCQMe-EED1colFA7gbYRVvGo3B4ooPKYlU-fRlGMkgeQp4X1ezJkoildyo72oRCLgBBXZO3dP0D0GuNcYRg0VmSJMTwc6Zmyvzok3eEUZCSaV01iNzTW-K5xQR5JiOzSMCfbBk0AnPWo557o5wOg';
-    }
-    return 'https://lh3.googleusercontent.com/aida-public/AB6AXuAVq58XZO1WMd_LIkRqx_xL_Gi5yHR-E-BZ-kNHEClyN5olBq5M5hv7b2RRnW9puslpY9s-38KPGoCr3a4Ek46J25vvE0Crnd92eqAwzKZ5L4JMx6bcTiTMRoKYVm9Izc-vZaKqD5SXQ-Lp3iLynE6B4GXONK5WvPH-xq2riyZg3mFHoKiEowFPQ7h-DaEkg9yDD6_dwOloOxqrNfxhhTG8lkx9k3uLFaZMnwMMSA6dpdF4REbZ4Ecxag';
+    return DateFormat('d MMM yyyy, HH:mm', 'id_ID').format(dt);
   }
 
   @override
@@ -155,11 +95,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Image.network(
-                    'https://lh3.googleusercontent.com/aida/AEtjO1U9hAdtIEYquHeUCRgPfhZxGBsHOmAADGKpUOXlxxQrh71SIu4_wShAts8QS54rNh23MrcZskE3M6ov5AqlwCDdrVDAf8vhR4voMYu0xLS7UWbhOf4osQiDXN3BUD4MQqOZV9xWkMVSFbg2QXmUjJ2y8T4oh0kKR2zin028bWLi131L8boqGFHiNQmDTm4ms-s7VczNNJV4WtCodTDn2hxkXdpV-RGjorU7nkzSI7HdIOm6l9qDCeDruOK1',
-                    height: 32,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary, size: 28),
-                  ),
+                  const TarlinkLogo(height: 32),
                   const SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,12 +111,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         ),
                       ),
                       Text(
-                        'Pesanan Saya',
+                        'Jadwal & Riwayat Hajat',
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
                           color: AppColors.textSecondary,
-                          letterSpacing: 0.04 * 10,
+                          height: 1.1,
                         ),
                       ),
                     ],
@@ -209,7 +144,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   ),
                   const SizedBox(width: 6),
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined, size: 22, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.notifications_none, color: AppColors.textSecondary),
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     },
@@ -218,11 +153,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const AccountScreen()));
                     },
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 16,
-                      backgroundImage: NetworkImage(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuDQzv_Dk0O_iXgTvC2fX5q2Ra5nMhk0V6gWLe22OVFVSbSF0uGiICiPoi-UUFv3veiiDLTJqejkCV4MCYKOKOJIUQn5K7h-ZJiGYo7mc8JnjyW6UE3Usc7hl38gAlBlVRASmzj85_FjCpyZw974XN_6-cw2aiGefOM5C2Dh92yexki3Qf4kyaDjbFo8RAQx-uq3P-CNFjPKCjR2GOEWbfp5wUoP_srtQpXwtk4lJdwcTi8sa7Hp5MXosw',
-                      ),
+                      backgroundColor: AppColors.primaryLight,
+                      backgroundImage: (AuthSession.currentUser?.avatarUrl != null &&
+                              AuthSession.currentUser!.avatarUrl!.startsWith('http'))
+                          ? NetworkImage(AuthSession.currentUser!.avatarUrl!)
+                          : null,
+                      child: (AuthSession.currentUser?.avatarUrl == null ||
+                              !AuthSession.currentUser!.avatarUrl!.startsWith('http'))
+                          ? const Icon(Icons.person, size: 18, color: AppColors.primaryDark)
+                          : null,
                     ),
                   ),
                 ],
@@ -288,20 +229,26 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.verified_user, color: AppColors.secondary, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Jaminan Pentas Resmi & Berizin Polsek',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(Icons.verified_user, color: AppColors.secondary, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Jaminan Pentas Resmi & Berizin Polsek',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           'Bantuan 24/7',
                           style: GoogleFonts.plusJakartaSans(
@@ -429,7 +376,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Widget _buildStitchBookingCard(BookingModel b) {
-    final photoUrl = _getArtistImage(b.code);
+    final photoUrl = (b.artistAvatarUrl != null && b.artistAvatarUrl!.startsWith('http'))
+        ? b.artistAvatarUrl
+        : null;
     final isWaitingDp = b.status == 'WAITING_DP';
     final isConfirmed = b.status == 'DP_PAID' || b.status == 'ONGOING';
     final isCompleted = b.status == 'COMPLETED' || b.status == 'FULL_PAID';
@@ -593,11 +542,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   color: AppColors.surfaceContainerHigh,
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Image.network(
-                  photoUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary),
-                ),
+                child: photoUrl != null
+                    ? Image.network(
+                        photoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.theater_comedy, color: AppColors.primary, size: 32),
+                      )
+                    : const Center(
+                        child: Icon(Icons.theater_comedy, color: AppColors.primary, size: 32),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -605,11 +558,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      b.code.contains('8892')
-                          ? 'Dian Anic & Anica Nada'
-                          : b.code.contains('4412')
-                              ? 'Susi Arzety & Arzety Nada'
-                              : 'Rolani Diva & Orkes Pantura',
+                      b.artistName?.isNotEmpty == true ? b.artistName! : 'Grup Seni Pantura',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -624,7 +573,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
-                            'Paket Komplit Siang-Malam (Hajat)',
+                            b.packageName?.isNotEmpty == true ? b.packageName! : 'Paket Pentas Komplit',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -754,11 +703,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      isWaitingDp ? 'Total Kontrak' : 'Sisa Pelunasan Cash (Lokasi)',
+                      isWaitingDp
+                          ? 'Total Kontrak'
+                          : isCompleted
+                              ? 'Status Pelunasan'
+                              : 'Sisa Pelunasan Cash (Lokasi)',
                       style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary),
                     ),
                     Text(
-                      CurrencyFormatter.formatRupiah(isWaitingDp ? b.totalPrice : b.remainingAmount),
+                      isCompleted
+                          ? 'Lunas'
+                          : CurrencyFormatter.formatRupiah(isWaitingDp ? b.totalPrice : b.remainingAmount),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -788,8 +743,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         MaterialPageRoute(
                           builder: (_) => OrderConfirmationScreen(
                             booking: b,
-                            artistName: 'Susi Arzety & Arzety Nada',
-                            packageName: 'Paket Reguler Siang (Khitanan)',
+                            artistName: b.artistName ?? 'Grup Seni Pantura',
+                            packageName: b.packageName ?? 'Paket Pentas Komplit',
                           ),
                         ),
                       );
@@ -814,8 +769,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
                       padding: const EdgeInsets.symmetric(vertical: 11),
                     ),
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => SnapPaymentScreen(
@@ -824,6 +779,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                           ),
                         ),
                       );
+                      if (mounted) _loadBookings();
                     },
                   ),
                 ),
@@ -848,16 +804,16 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                     onPressed: () {
                       final voucher = EVoucherModel(
                         code: b.code,
-                        voucherQrData: 'TRG-AUTH-${b.code}-${b.dpAmount}',
-                        artistName: 'Dian Anic & Anica Nada',
-                        packageName: 'Paket Komplit Siang-Malam',
+                        voucherQrData: b.evoucherCode ?? 'TRG-AUTH-${b.code}-${b.dpAmount}',
+                        artistName: b.artistName ?? 'Grup Seni Pantura',
+                        packageName: b.packageName ?? 'Paket Pentas Komplit',
                         eventDate: DateFormat('dd MMM yyyy').format(b.eventDate),
                         venueAddress: b.venueAddress,
                         zone: b.zone ?? 'Ring 1',
                         totalPrice: b.totalPrice,
                         dpPaid: b.dpAmount,
                         remainingCash: b.remainingAmount,
-                        customerName: 'Bpk. Sohibul Hajat',
+                        customerName: AuthSession.currentUser?.name ?? 'Sohibul Hajat',
                       );
                       Navigator.push(
                         context,
@@ -885,11 +841,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => GroupChatScreen(
-                            artistName: b.code.contains('8892')
-                                ? 'Dian Anic & Anica Nada'
-                                : b.code.contains('4412')
-                                    ? 'Susi Arzety & Arzety Nada'
-                                    : 'Rolani Diva & Orkes Pantura',
+                            artistName: b.artistName ?? 'Grup Seni Pantura',
+                            artistAvatarUrl: b.artistAvatarUrl,
                             bookingCode: b.code,
                             eventDate: DateFormat('dd MMM yyyy').format(b.eventDate),
                             venue: '${b.district}, ${b.city}',
@@ -909,8 +862,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   'Konfirmasi Pelunasan Tunai di Lokasi',
                   style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary),
                 ),
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => CashConfirmationScreen(
@@ -920,6 +873,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       ),
                     ),
                   );
+                  if (mounted) _loadBookings();
                 },
               ),
             ),
@@ -999,7 +953,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                           builder: (_) => ReviewScreen(
                             bookingId: b.id,
                             artistId: b.artistId,
-                            artistName: 'Rolani Diva & Orkes Pantura',
+                            artistName: b.artistName ?? 'Grup Seni Pantura',
+                            artistAvatarUrl: b.artistAvatarUrl,
                           ),
                         ),
                       );

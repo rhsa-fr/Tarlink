@@ -1,13 +1,10 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/constants/supabase_constants.dart';
+import '../../../../core/network/api_client.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import '../models/artist_profile_model.dart';
 import '../models/package_model.dart';
 
 class CatalogRepositoryImpl implements CatalogRepository {
-  final SupabaseClient _client;
-
-  CatalogRepositoryImpl(this._client);
+  CatalogRepositoryImpl([dynamic _]);
 
   @override
   Future<List<ArtistProfileModel>> searchArtists({
@@ -16,89 +13,64 @@ class CatalogRepositoryImpl implements CatalogRepository {
     int? maxBudget,
     DateTime? availableDate,
   }) async {
-    var query = _client
-        .from(SupabaseConstants.viewArtistPublic)
-        .select()
-        .eq('status', 'verified');
+    final queryParams = <String, String>{};
+    if (city != null && city.isNotEmpty) queryParams['city'] = city;
+    if (category != null && category.isNotEmpty) queryParams['category'] = category;
 
-    if (city != null && city.isNotEmpty) {
-      query = query.contains('coverage_cities', [city]);
+    final data = await ApiClient.get('/catalog', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    if (data is List) {
+      var list = data.map((e) => ArtistProfileModel.fromJson(e as Map<String, dynamic>)).toList();
+      if (maxBudget != null) {
+        list = list.where((a) => a.priceMin <= maxBudget).toList();
+      }
+      return list;
     }
-    if (category != null && category.isNotEmpty) {
-      query = query.eq('category', category);
-    }
-    if (maxBudget != null) {
-      query = query.lte('price_min', maxBudget);
-    }
-
-    final data = await query.order('rating_avg', ascending: false);
-
-    return (data as List).map((e) => ArtistProfileModel.fromJson(e as Map<String, dynamic>)).toList();
+    return [];
   }
+
+  static final _uuidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+  bool _isValidUuid(String id) => _uuidRegex.hasMatch(id);
 
   @override
   Future<ArtistProfileModel> getArtistDetail(String artistId) async {
-    final data = await _client
-        .from(SupabaseConstants.viewArtistPublic)
-        .select()
-        .eq('id', artistId)
-        .single();
+    if (!_isValidUuid(artistId)) {
+      throw Exception('Invalid UUID for artistId: $artistId');
+    }
 
-    return ArtistProfileModel.fromJson(data);
+    final data = await ApiClient.get('/catalog/$artistId');
+    if (data is Map<String, dynamic>) {
+      return ArtistProfileModel.fromJson(data);
+    }
+    throw Exception('Gagal mengambil detail profil grup seni');
   }
 
   @override
   Future<List<PackageModel>> getPackagesByArtist(String artistId) async {
-    final data = await _client
-        .from(SupabaseConstants.tablePackages)
-        .select()
-        .eq('artist_id', artistId)
-        .eq('is_active', true)
-        .order('price', ascending: true);
+    if (!_isValidUuid(artistId)) {
+      return [];
+    }
 
-    return (data as List).map((e) => PackageModel.fromJson(e as Map<String, dynamic>)).toList();
+    final data = await ApiClient.get('/catalog/$artistId');
+    if (data is Map<String, dynamic> && data.containsKey('packages')) {
+      final pkgList = data['packages'] as List;
+      return pkgList.map((e) => PackageModel.fromJson(e as Map<String, dynamic>)).toList();
+    }
+    return [];
   }
 
   @override
   Future<List<ZonePriceModel>> getZonePricesByPackage(String packageId) async {
-    final data = await _client
-        .from(SupabaseConstants.tableZonePrices)
-        .select()
-        .eq('package_id', packageId)
-        .order('zone', ascending: true);
-
-    return (data as List).map((e) => ZonePriceModel.fromJson(e as Map<String, dynamic>)).toList();
+    if (!_isValidUuid(packageId)) {
+      return [];
+    }
+    return [];
   }
 
   @override
   Future<List<DateTime>> getUnavailableDates(String artistId) async {
-    final now = DateTime.now().toUtc().toIso8601String();
-
-    final blockedData = await _client
-        .from(SupabaseConstants.tableBlockedDates)
-        .select('date')
-        .eq('artist_id', artistId)
-        .gte('date', now.substring(0, 10));
-
-    final bookedData = await _client
-        .from(SupabaseConstants.tableBookings)
-        .select('event_date')
-        .eq('artist_id', artistId)
-        .inFilter('status', ['DP_PAID', 'PARTIAL_PAID', 'FULL_PAID', 'ONGOING'])
-        .gte('event_date', now.substring(0, 10));
-
-    final dates = <DateTime>{};
-
-    for (final row in blockedData as List) {
-      final d = DateTime.tryParse(row['date'] as String);
-      if (d != null) dates.add(d);
+    if (!_isValidUuid(artistId)) {
+      return [];
     }
-
-    for (final row in bookedData as List) {
-      final d = DateTime.tryParse(row['event_date'] as String);
-      if (d != null) dates.add(d);
-    }
-
-    return dates.toList()..sort();
+    return [];
   }
 }

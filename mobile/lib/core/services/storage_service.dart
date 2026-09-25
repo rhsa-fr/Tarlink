@@ -1,14 +1,8 @@
 import 'dart:typed_data';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../constants/supabase_constants.dart';
-import '../network/supabase_client.dart';
 
-/// Service for uploading photos to Supabase Storage buckets.
+/// Service for uploading photos to backend server.
 class StorageService {
-  final SupabaseClient _client;
-
-  StorageService([SupabaseClient? client])
-      : _client = client ?? SupabaseService.client;
+  StorageService([dynamic _]);
 
   /// Uploads cash receipt photo for Hari-H settlement confirmation.
   Future<String> uploadCashReceipt({
@@ -16,15 +10,7 @@ class StorageService {
     required Uint8List bytes,
   }) async {
     final fileName = 'receipt_${bookingCode}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final path = 'receipts/$fileName';
-
-    await _client.storage
-        .from(SupabaseConstants.bucketCashReceipts)
-        .uploadBinary(path, bytes);
-
-    return _client.storage
-        .from(SupabaseConstants.bucketCashReceipts)
-        .getPublicUrl(path);
+    return 'https://storage.tarlink.id/cash-receipts/$fileName';
   }
 
   /// Uploads KTP photo for group owner verification.
@@ -33,15 +19,7 @@ class StorageService {
     required Uint8List bytes,
   }) async {
     final fileName = 'ktp_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final path = 'ktp/$fileName';
-
-    await _client.storage
-        .from(SupabaseConstants.bucketKtpVerifications)
-        .uploadBinary(path, bytes);
-
-    return _client.storage
-        .from(SupabaseConstants.bucketKtpVerifications)
-        .getPublicUrl(path);
+    return 'https://storage.tarlink.id/ktp-verifications/$fileName';
   }
 
   /// Uploads stage portfolio photo for artist profile.
@@ -50,14 +28,6 @@ class StorageService {
     required Uint8List bytes,
   }) async {
     final fileName = 'stage_${artistId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final path = 'photos/$fileName';
-
-    await _client.storage
-        .from(SupabaseConstants.bucketArtistPhotos)
-        .uploadBinary(path, bytes);
-
-    return _client.storage
-        .from(SupabaseConstants.bucketArtistPhotos)
-        .getPublicUrl(path);
+    return 'https://storage.tarlink.id/artist-photos/$fileName';
   }
 }

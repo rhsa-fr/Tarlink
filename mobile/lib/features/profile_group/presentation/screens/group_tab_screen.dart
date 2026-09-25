@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../auth/presentation/screens/login_otp_screen.dart';
@@ -31,11 +31,10 @@ class _GroupTabScreenState extends State<GroupTabScreen> {
   Future<void> _checkProfile() async {
     setState(() => _isLoading = true);
     try {
-      final user = SupabaseService.client.auth.currentUser;
+      final user = AuthSession.currentUser;
       if (user == null) {
-        // Fallback for preview / demo: use mock artist
-        _currentUserId = 'mock-user-1';
-        _artistProfile = await widget.repository.getMyArtistProfile('a1');
+        _currentUserId = null;
+        _artistProfile = null;
       } else {
         _currentUserId = user.id;
         _artistProfile = await widget.repository.getMyArtistProfile(user.id);

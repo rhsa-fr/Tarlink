@@ -4,7 +4,6 @@ import '../../../../core/widgets/tarlink_logo.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../auth/presentation/screens/account_screen.dart';
@@ -30,6 +29,7 @@ class ArtistDetailScreen extends StatefulWidget {
 }
 
 class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
+  late ArtistProfileModel _artist;
   List<PackageModel> _packages = [];
   PackageModel? _selectedPackage;
   List<String> _unavailableDates = [];
@@ -38,11 +38,12 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
   bool _isFavorite = false;
   bool _isPlayingAudio = false;
   bool _isBioExpanded = false;
-  final int _heroPhotoCount = 5;
+  final int _heroPhotoCount = 3;
 
   @override
   void initState() {
     super.initState();
+    _artist = widget.artist;
     // Default tanggal baik kosong terdekat: 15 hari dari sekarang
     _selectedDate = DateTime.now().add(const Duration(days: 15));
     _loadDetailData();
@@ -57,45 +58,70 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
   }
 
   Future<void> _loadDetailData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final repo = widget.repository ?? CatalogRepositoryImpl(SupabaseService.client);
+      final repo = widget.repository ?? CatalogRepositoryImpl();
+
+      // Ambil detail profil artis terupdate langsung dari database
+      try {
+        final freshArtist = await repo.getArtistDetail(widget.artist.id);
+        if (mounted) {
+          setState(() => _artist = freshArtist);
+        }
+      } catch (err) {
+        debugPrint('[ArtistDetail] Info refresh profil DB: $err');
+      }
+
+      // Ambil paket pementasan langsung dari tabel packages di database
       final packages = await repo.getPackagesByArtist(widget.artist.id);
       final blocked = await repo.getUnavailableDates(widget.artist.id);
 
+      if (!mounted) return;
       setState(() {
         _packages = packages;
-        if (packages.isNotEmpty) {
-          _selectedPackage = packages.first;
-        }
+        _selectedPackage = _packages.isNotEmpty ? _packages.first : null;
         _unavailableDates = blocked.map((d) => DateFormat('yyyy-MM-dd').format(d)).toList();
+        final selDateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+        if (_unavailableDates.contains(selDateStr)) {
+          final now = DateTime.now();
+          for (int i = 10; i < 60; i++) {
+            final candidate = now.add(Duration(days: i));
+            final candStr = DateFormat('yyyy-MM-dd').format(candidate);
+            if (!_unavailableDates.contains(candStr)) {
+              _selectedDate = candidate;
+              break;
+            }
+          }
+        }
       });
-    } catch (_) {
-      // Mock packages fallback sesuai standar panggung Pantura
+    } catch (e) {
+      debugPrint('[ArtistDetail] Gagal mengambil data real dari database: $e');
+      if (!mounted) return;
       setState(() {
-        _packages = [
-          PackageModel(
-            id: 'pkg-1',
-            artistId: widget.artist.id,
-            name: 'Paket Komplit Siang-Malam (Hajatan Akbar)',
-            durationHours: 14,
-            price: widget.artist.priceMax > 0 ? widget.artist.priceMax : 25000000,
-            includes: '2 Sinden Bintang + 4 Vokalis Tamu, 18 Musisi Pengiring (Gamelan, Brass, Keyboard, Kendang Jaipong), Sound System 15.000 Watt Line Array + Rigging, Tata Lampu Moving Beam & Parled, Durasi 09.00 - 23.00 WIB (Sesi Siang & Malam)',
-          ),
-          PackageModel(
-            id: 'pkg-2',
-            artistId: widget.artist.id,
-            name: 'Paket Reguler Siang (Resepsi & Khitanan)',
-            durationHours: 8,
-            price: widget.artist.priceMin > 0 ? widget.artist.priceMin : 18500000,
-            includes: '1 Sinden Utama + 2 Vokalis Pendamping, 12 Musisi Formasi Inti Tarling, Sound System 10.000 Watt, Durasi 09.00 - 16.30 WIB (Sesi Siang)',
-          ),
-        ];
-        _selectedPackage = _packages.first;
+        _packages = [];
+        _selectedPackage = null;
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Widget _buildHeroPlaceholder() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF7A1C06), Color(0xFF3B0B01), Color(0xFF1E0600)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: const Center(
+        child: ExcludeSemantics(
+          child: Icon(Icons.theater_comedy, size: 88, color: Colors.white12),
+        ),
+      ),
+    );
   }
 
   Future<void> _shareArtist() async {
@@ -107,7 +133,7 @@ Tarif Mulai: ${CurrencyFormatter.formatRupiah(widget.artist.priceMin)}
 Rating: ⭐ ${widget.artist.ratingAvg.toStringAsFixed(1)}/5.0
 
 Pesan rombongan resmi lewat Tarlink (DP 20% Escrow Aman, Pelunasan Cash di Lokasi):
-https://tarlingku.id/artis/${widget.artist.id}
+https://tarlink.id/artis/${widget.artist.id}
 ''';
 
     await SharePlus.instance.share(
@@ -137,6 +163,8 @@ https://tarlingku.id/artis/${widget.artist.id}
           packageName: _selectedPackage!.name,
           artistBaseLat: widget.artist.baseLat ?? -6.4500,
           artistBaseLng: widget.artist.baseLng ?? 108.3000,
+          artistAvatarUrl: _artist.avatarUrl,
+          eventDate: _selectedDate,
         ),
       ),
     );
@@ -253,8 +281,8 @@ https://tarlingku.id/artis/${widget.artist.id}
 
   @override
   Widget build(BuildContext context) {
-    final a = widget.artist;
-    final currentPrice = _selectedPackage?.price ?? (a.priceMin > 0 ? a.priceMin : 25000000);
+    final a = _artist;
+    final currentPrice = _selectedPackage?.price ?? (a.priceMin > 0 ? a.priceMin : 0);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -351,21 +379,14 @@ https://tarlingku.id/artis/${widget.artist.id}
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Stage Artwork
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF7A1C06), Color(0xFF3B0B01), Color(0xFF1E0600)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: const Center(
-              child: ExcludeSemantics(
-                child: Icon(Icons.theater_comedy, size: 88, color: Colors.white12),
-              ),
-            ),
-          ),
+          // Real Stage Artwork or Avatar from database
+          (_artist.avatarUrl != null && _artist.avatarUrl!.startsWith('http'))
+              ? Image.network(
+                  _artist.avatarUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _buildHeroPlaceholder(),
+                )
+              : _buildHeroPlaceholder(),
 
           // Gradient Scrim for readable badges
           Container(
@@ -538,9 +559,18 @@ https://tarlingku.id/artis/${widget.artist.id}
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.groups, size: 14, color: AppColors.onSurfaceVariant),
-                    SizedBox(width: 4),
-                    Text('24 Musisi & Sinden', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                    const Icon(Icons.groups, size: 14, color: AppColors.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text(
+                      a.category == 'sandiwara-full'
+                          ? '30+ Kru & Pemain Lakon'
+                          : a.category == 'tarling-dangdut'
+                              ? '18+ Musisi & Sinden'
+                              : a.category == 'organ-tunggal'
+                                  ? '8+ Musisi & Biduan'
+                                  : 'Artis & Penata Gaya',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.onSurfaceVariant),
+                    ),
                   ],
                 ),
               ),
@@ -635,13 +665,16 @@ https://tarlingku.id/artis/${widget.artist.id}
                           Row(
                             children: [
                               Text(
-                                a.ratingAvg > 0 ? a.ratingAvg.toStringAsFixed(1) : '4.9',
+                                a.ratingAvg > 0 ? a.ratingAvg.toStringAsFixed(1) : '5.0',
                                 style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800),
                               ),
                               Text('/5.0', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.onSurfaceVariant)),
                             ],
                           ),
-                          Text('342 Ulasan Nyata', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                          Text(
+                            a.totalJob > 0 ? '${a.totalJob * 2} Ulasan' : 'Ulasan Perdana',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant),
+                          ),
                         ],
                       ),
                     ],
@@ -673,10 +706,13 @@ https://tarlingku.id/artis/${widget.artist.id}
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            a.totalJob > 0 ? '${a.totalJob}+ Sukses' : '120+ Sukses',
+                            a.totalJob > 0 ? '${a.totalJob}+ Sukses' : 'Siap Pentas',
                             style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.tertiary),
                           ),
-                          Text('Hajat Terlaksana', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                          Text(
+                            a.totalJob > 0 ? 'Hajat Terlaksana' : 'Jadwal Terbuka',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant),
+                          ),
                         ],
                       ),
                     ],
@@ -881,8 +917,10 @@ https://tarlingku.id/artis/${widget.artist.id}
                 children: List.generate(14, (i) {
                   final d = now.add(Duration(days: i + 10));
                   final dStr = DateFormat('yyyy-MM-dd').format(d);
-                  final isBooked = _unavailableDates.contains(dStr) || (i == 1 || i == 5);
-                  final isSelected = d.day == _selectedDate.day && d.month == _selectedDate.month;
+                  final isBooked = _unavailableDates.contains(dStr);
+                  final isSelected = d.day == _selectedDate.day &&
+                      d.month == _selectedDate.month &&
+                      d.year == _selectedDate.year;
                   final dayName = _formatDate(d, 'EEE').toUpperCase();
 
                   if (isBooked) {
@@ -1012,7 +1050,41 @@ https://tarlingku.id/artis/${widget.artist.id}
           ),
           const SizedBox(height: 12),
 
-          ..._packages.map((pkg) {
+          if (_packages.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.inventory_2_outlined, size: 40, color: AppColors.textMuted),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Belum Ada Paket di Database',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Pimpinan rombongan belum mengunggah daftar paket pementasan.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ..._packages.map((pkg) {
             final isSelected = _selectedPackage?.id == pkg.id;
             final isPopular = pkg.name.toLowerCase().contains('komplit') || pkg.name.toLowerCase().contains('akbar');
 
@@ -1185,6 +1257,16 @@ https://tarlingku.id/artis/${widget.artist.id}
   }
 
   Widget _buildGallerySection(BuildContext context) {
+    final List<String> photos = _artist.portfolioUrls.isNotEmpty
+        ? _artist.portfolioUrls
+        : (_artist.avatarUrl != null && _artist.avatarUrl!.startsWith('http')
+            ? [_artist.avatarUrl!]
+            : []);
+
+    if (photos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -1193,8 +1275,8 @@ https://tarlingku.id/artis/${widget.artist.id}
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Galeri Pentas Terbaru', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.bold)),
-              Text('Lihat 18 Foto', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
+              Text('Galeri Pentas', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text('Dokumentasi Panggung', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 10),
@@ -1203,42 +1285,68 @@ https://tarlingku.id/artis/${widget.artist.id}
               Expanded(
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.photo, color: AppColors.onSurfaceVariant),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.music_note, color: AppColors.onSurfaceVariant),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF191C21),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '+15',
-                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      photos[0],
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: AppColors.surfaceContainerHigh,
+                        child: const Icon(Icons.photo, color: AppColors.onSurfaceVariant),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: photos.length > 1
+                        ? Image.network(
+                            photos[1],
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppColors.surfaceContainerHigh,
+                              child: const Icon(Icons.music_note, color: AppColors.onSurfaceVariant),
+                            ),
+                          )
+                        : Container(
+                            color: AppColors.surfaceContainerHigh,
+                            child: const Icon(Icons.music_note, color: AppColors.onSurfaceVariant),
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (photos.length > 2)
+                          Image.network(
+                            photos[2],
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(color: const Color(0xFF191C21)),
+                          )
+                        else
+                          Container(color: const Color(0xFF191C21)),
+                        Container(
+                          color: Colors.black.withAlpha(140),
+                          child: Center(
+                            child: Text(
+                              '+${_artist.totalJob > 0 ? _artist.totalJob : 15}',
+                              style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1251,6 +1359,9 @@ https://tarlingku.id/artis/${widget.artist.id}
   }
 
   Widget _buildTestimonialSection(BuildContext context) {
+    final hasJobs = _artist.totalJob > 0;
+    final ratingVal = _artist.ratingAvg > 0 ? _artist.ratingAvg : 5.0;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Container(
@@ -1269,32 +1380,70 @@ https://tarlingku.id/artis/${widget.artist.id}
                 Row(
                   children: List.generate(
                     5,
-                    (i) => const Icon(Icons.star, size: 15, color: AppColors.secondary),
+                    (i) => Icon(
+                      i < ratingVal.floor() ? Icons.star : Icons.star_half,
+                      size: 15,
+                      color: AppColors.secondary,
+                    ),
                   ),
                 ),
-                Text('2 pekan lalu', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                Text(
+                  hasJobs ? 'Rekam Jejak Terverifikasi' : 'Mitra Baru Terdaftar',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: hasJobs ? AppColors.primary : AppColors.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              '"Suara vokal Mbak Dian mantap sekali, tamu undangan sangat terhibur, musisi disiplin dan tepat waktu! Sound system menggelegar tapi tetap empuk di telinga warga sekeliling."',
-              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.onSurface, height: 1.4),
+              hasJobs
+                  ? '${_artist.displayName} telah menyelesaikan ${_artist.totalJob} agenda pementasan resmi di wilayah Pantura dengan reputasi performa prima dan jadwal tepat waktu.'
+                  : '${_artist.displayName} siap melayani hajatan Anda. Jadilah tuan hajat pertama yang mengundang dan memberikan ulasan pementasan melalui Tarlink!',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontStyle: FontStyle.normal,
+                color: AppColors.onSurface,
+                height: 1.4,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Row(
               children: [
                 CircleAvatar(
                   radius: 14,
                   backgroundColor: AppColors.primaryLight,
-                  child: Text('HS', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
+                  child: Icon(
+                    hasJobs ? Icons.verified : Icons.stars,
+                    size: 16,
+                    color: AppColors.primaryDark,
+                  ),
                 ),
-                SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('H. Sulaeman', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.bold)),
-                    Text('Hajatan Pernikahan Putri di Cirebon Barat', style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppColors.onSurfaceVariant)),
-                  ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hasJobs
+                            ? 'Rating ${ratingVal.toStringAsFixed(1)} / 5.0 • ${_artist.totalJob} Pementasan Selesai'
+                            : 'Profil Terverifikasi Admin Pasar Tarlink',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Jaminan DP 20% Escrow Aman • Pelunasan Cash di Lokasi',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

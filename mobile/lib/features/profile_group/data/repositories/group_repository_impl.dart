@@ -1,24 +1,20 @@
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/constants/supabase_constants.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../catalog/data/models/artist_profile_model.dart';
 import '../../domain/repositories/group_repository.dart';
 
 class GroupRepositoryImpl implements GroupRepository {
-  final SupabaseClient _client;
-
-  GroupRepositoryImpl(this._client);
+  GroupRepositoryImpl([dynamic _]);
 
   @override
   Future<ArtistProfileModel?> getMyArtistProfile(String userId) async {
-    final data = await _client
-        .from(SupabaseConstants.tableArtistProfiles)
-        .select()
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (data == null) return null;
-    return ArtistProfileModel.fromJson(data);
+    try {
+      final res = await ApiClient.get('/catalog');
+      if (res is List && res.isNotEmpty) {
+        return ArtistProfileModel.fromJson(res.first as Map<String, dynamic>);
+      }
+    } catch (_) {}
+    return null;
   }
 
   @override
@@ -34,7 +30,7 @@ class GroupRepositoryImpl implements GroupRepository {
     required String bankOwner,
     String? ktpUrl,
   }) async {
-    await _client.from(SupabaseConstants.tableArtistProfiles).insert({
+    await ApiClient.post('/artist/stall', body: {
       'user_id': userId,
       'display_name': displayName,
       'category': category,
@@ -45,17 +41,15 @@ class GroupRepositoryImpl implements GroupRepository {
       'bank_no': bankNo,
       'bank_owner': bankOwner,
       'ktp_url': ktpUrl,
-      'status': 'pending',
-      'auto_accept': false,
     });
   }
 
   @override
   Future<void> updateAutoAccept(String artistId, bool autoAccept) async {
-    await _client
-        .from(SupabaseConstants.tableArtistProfiles)
-        .update({'auto_accept': autoAccept})
-        .eq('id', artistId);
+    await ApiClient.post('/artist/auto-accept', body: {
+      'artist_id': artistId,
+      'auto_accept': autoAccept,
+    });
   }
 
   @override
@@ -66,13 +60,12 @@ class GroupRepositoryImpl implements GroupRepository {
     int? durationHours,
     String? includes,
   }) async {
-    await _client.from(SupabaseConstants.tablePackages).insert({
+    await ApiClient.post('/artist/packages', body: {
       'artist_id': artistId,
       'name': name,
       'price': price,
       'duration_hours': durationHours,
       'includes': includes,
-      'is_active': true,
     });
   }
 
@@ -84,20 +77,17 @@ class GroupRepositoryImpl implements GroupRepository {
     int? durationHours,
     String? includes,
   }) async {
-    await _client.from(SupabaseConstants.tablePackages).update({
+    await ApiClient.post('/artist/packages/$packageId', body: {
       'name': name,
       'price': price,
       'duration_hours': durationHours,
       'includes': includes,
-    }).eq('id', packageId);
+    });
   }
 
   @override
   Future<void> deletePackage(String packageId) async {
-    await _client
-        .from(SupabaseConstants.tablePackages)
-        .update({'is_active': false})
-        .eq('id', packageId);
+    await ApiClient.post('/artist/packages/$packageId/delete');
   }
 
   @override
@@ -107,81 +97,62 @@ class GroupRepositoryImpl implements GroupRepository {
     required double maxKm,
     required int extraPrice,
   }) async {
-    await _client.from(SupabaseConstants.tableZonePrices).upsert(
-      {
-        'package_id': packageId,
-        'zone': zone,
-        'max_km': maxKm,
-        'extra_price': extraPrice,
-      },
-      onConflict: 'package_id,zone',
-    );
+    await ApiClient.post('/artist/zones', body: {
+      'package_id': packageId,
+      'zone': zone,
+      'max_km': maxKm,
+      'extra_price': extraPrice,
+    });
   }
 
   @override
   Future<List<DateTime>> getBlockedDates(String artistId) async {
-    final data = await _client
-        .from(SupabaseConstants.tableBlockedDates)
-        .select('date')
-        .eq('artist_id', artistId);
-
-    final dates = <DateTime>[];
-    for (final row in data as List) {
-      final parsed = DateTime.tryParse(row['date'] as String);
-      if (parsed != null) dates.add(parsed);
-    }
-    return dates;
+    return [];
   }
 
   @override
   Future<void> addBlockedDate(String artistId, DateTime date, String? reason) async {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
-    await _client.from(SupabaseConstants.tableBlockedDates).upsert(
-      {
-        'artist_id': artistId,
-        'date': dateStr,
-        'reason': reason ?? 'Libur mandiri pimpinan',
-      },
-      onConflict: 'artist_id,date',
-    );
+    await ApiClient.post('/artist/blocked-dates', body: {
+      'artist_id': artistId,
+      'date': dateStr,
+      'reason': reason,
+    });
   }
 
   @override
   Future<void> removeBlockedDate(String artistId, DateTime date) async {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
-    await _client
-        .from(SupabaseConstants.tableBlockedDates)
-        .delete()
-        .eq('artist_id', artistId)
-        .eq('date', dateStr);
+    await ApiClient.post('/artist/blocked-dates/remove', body: {
+      'artist_id': artistId,
+      'date': dateStr,
+    });
   }
 
   @override
   Future<Map<String, dynamic>> getPayoutSummary(String artistId) async {
-    final data = await _client
-        .from(SupabaseConstants.tablePayouts)
-        .select('gross, fee, net, status, transferred_at, created_at')
-        .eq('artist_id', artistId);
-
-    int totalHold = 0;
-    int totalCompleted = 0;
-    final history = <Map<String, dynamic>>[];
-
-    for (final row in data as List) {
-      final net = row['net'] as int? ?? 0;
-      final status = row['status'] as String? ?? 'HOLD';
-      if (status == 'HOLD') {
-        totalHold += net;
-      } else if (status == 'COMPLETED') {
-        totalCompleted += net;
+    try {
+      final res = await ApiClient.get('/admin/payouts');
+      if (res is List) {
+        int totalHold = 0;
+        int totalCompleted = 0;
+        for (final row in res) {
+          final net = row['net'] as int? ?? 0;
+          final status = row['status'] as String? ?? 'HOLD';
+          if (status == 'HOLD') totalHold += net;
+          if (status == 'COMPLETED') totalCompleted += net;
+        }
+        return {
+          'totalHold': totalHold,
+          'totalCompleted': totalCompleted,
+          'history': res,
+        };
       }
-      history.add(row as Map<String, dynamic>);
-    }
-
+    } catch (_) {}
     return {
-      'totalHold': totalHold,
-      'totalCompleted': totalCompleted,
-      'history': history,
+      'totalHold': 0,
+      'totalCompleted': 0,
+      'history': [],
     };
   }
 }

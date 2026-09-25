@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 import '../../../auth/presentation/screens/account_screen.dart';
 import '../../../chat_bot/presentation/screens/faq_screen.dart';
 
@@ -9,12 +11,14 @@ class ReviewScreen extends StatefulWidget {
   final String bookingId;
   final String artistId;
   final String artistName;
+  final String? artistAvatarUrl;
 
   const ReviewScreen({
     super.key,
     required this.bookingId,
     required this.artistId,
     required this.artistName,
+    this.artistAvatarUrl,
   });
 
   @override
@@ -43,10 +47,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     'Lagu Permintaan Terpenuhi',
   ];
 
-  final List<String> _photoUrls = [
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuDjJ_EuD7SSC6zywg1KZcMpA855Y2hWTF11ulYS_mbmgBZsruRDz3TvVbUI7chtJPzVTHMH9ROUaxulLOUz8BCTG_OyJSguUPIjQO82ZuMlzw8-yYPh-I-kULdZkSFX92h3zILt1L4qjM8N6_Mwe-EFfx8l-lLTcjXX1KLoicC4YkV3nqzc2DGB8lLkQ9Y7ZsgADxGZOTPn10yk-0gibM-KBoe02QeBVpAwHntLmJkAufhjt-_49IS0HA',
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCSNgW30jC5DPPrcmYOW-7k0kDtRuFd-CZIxRYpvIDkZMqCE7pRBevQ-cHOVwGhhXSbBt6aejFe6I9YTwSadZ2PuPceTW9DA7TuZFVDNi_S120hPxVBGjYpQZiYwyy6JYOxp8tgfmSVrVQlVi_2oDQ6Cw1u1Al9yMgUQzImezxBP2l9JLfhpPI9aKK1VWnCHGgiLJBUabk8U9KL_cGk-53T74R_bD6tHCt3AC3veAz1PEd5zvV7D_PobA',
-  ];
+  final List<String> _photoUrls = [];
 
   @override
   void dispose() {
@@ -71,9 +72,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   Future<void> _submitReview() async {
     setState(() => _isSubmitting = true);
+    final userId = AuthSession.currentUserId;
     try {
-      final userId = SupabaseService.client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
-      await SupabaseService.client.from('reviews').insert({
+      await ApiClient.post('/reviews', body: {
         'booking_id': widget.bookingId,
         'customer_id': userId,
         'artist_id': widget.artistId,
@@ -181,11 +182,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  Image.network(
-                    'https://lh3.googleusercontent.com/aida/AEtjO1U9hAdtIEYquHeUCRgPfhZxGBsHOmAADGKpUOXlxxQrh71SIu4_wShAts8QS54rNh23MrcZskE3M6ov5AqlwCDdrVDAf8vhR4voMYu0xLS7UWbhOf4osQiDXN3BUD4MQqOZV9xWkMVSFbg2QXmUjJ2y8T4oh0kKR2zin028bWLi131L8boqGFHiNQmDTm4ms-s7VczNNJV4WtCodTDn2hxkXdpV-RGjorU7nkzSI7HdIOm6l9qDCeDruOK1',
-                    height: 28,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary, size: 24),
-                  ),
+                  const TarlinkLogo(height: 28),
                   const SizedBox(width: 8),
                   Text(
                     'Beri Ulasan',
@@ -206,11 +203,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const AccountScreen()));
                     },
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 16,
-                      backgroundImage: NetworkImage(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuDQzv_Dk0O_iXgTvC2fX5q2Ra5nMhk0V6gWLe22OVFVSbSF0uGiICiPoi-UUFv3veiiDLTJqejkCV4MCYKOKOJIUQn5K7h-ZJiGYo7mc8JnjyW6UE3Usc7hl38gAlBlVRASmzj85_FjCpyZw974XN_6-cw2aiGefOM5C2Dh92yexki3Qf4kyaDjbFo8RAQx-uq3P-CNFjPKCjR2GOEWbfp5wUoP_srtQpXwtk4lJdwcTi8sa7Hp5MXosw',
-                      ),
+                      backgroundColor: AppColors.primaryContainer,
+                      backgroundImage: (AuthSession.currentUser?.avatarUrl != null &&
+                              AuthSession.currentUser!.avatarUrl!.startsWith('http'))
+                          ? NetworkImage(AuthSession.currentUser!.avatarUrl!)
+                          : null,
+                      child: (AuthSession.currentUser?.avatarUrl == null ||
+                              !AuthSession.currentUser!.avatarUrl!.startsWith('http'))
+                          ? const Icon(Icons.person, size: 18, color: AppColors.primary)
+                          : null,
                     ),
                   ),
                 ],
@@ -264,11 +267,26 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     color: AppColors.surfaceContainerHigh,
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: Image.network(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuBrPfAUtWygUtOsWreskrtNYjvjFZFwLd4gDAMofe5hhuTYMZ5-TH9a0zZHv-dQG3plpnVg-nN0K49JFt-oXbHznbMX0EGMqyS9Ahfb-L326q3DG14yhyUb_N_9ALBQVIjn--iJnrSz6l4nZcnznj4TCyGGmbF5X8AgPOQQLX_6YWyhWPI9vdBfmPnDYf5pBTsi-gcXLcHpuHmxPHO2fnIVLFkhTJjTdAl-72QirAlNjEtE6YZjFnTwjA',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary),
-                  ),
+                  child: (widget.artistAvatarUrl != null && widget.artistAvatarUrl!.startsWith('http'))
+                      ? Image.network(
+                          widget.artistAvatarUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(Icons.theater_comedy, color: AppColors.primary, size: 32),
+                          ),
+                        )
+                      : Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF8B1E1E), Color(0xFFD4A017)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.theater_comedy, color: Colors.white, size: 32),
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -659,10 +677,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     if (_photoUrls.length < 5)
                       InkWell(
                         onTap: () {
-                          // Simulate adding a photo
-                          setState(() {
-                            _photoUrls.add('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&auto=format&fit=crop&q=80');
-                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Pilih foto dokumentasi hajatan dari galeri HP')),
+                          );
                         },
                         child: Container(
                           width: 80,

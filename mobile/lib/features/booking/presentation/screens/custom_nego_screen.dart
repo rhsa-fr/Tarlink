@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -36,7 +35,6 @@ class _CustomNegoScreenState extends State<CustomNegoScreen> {
   List<BookingMessageModel> _messages = [];
   bool _isLoading = true;
   bool _isProcessing = false;
-  RealtimeChannel? _realtimeChannel;
 
   @override
   void initState() {
@@ -45,41 +43,10 @@ class _CustomNegoScreenState extends State<CustomNegoScreen> {
     _subscribeRealtime();
   }
 
-  void _subscribeRealtime() {
-    try {
-      final client = SupabaseService.client;
-      _realtimeChannel = client.channel('booking_nego_${widget.bookingId}')
-        ..onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'booking_offers',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'booking_id',
-            value: widget.bookingId,
-          ),
-          callback: (_) => _loadNegoData(silent: true),
-        )
-        ..onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'booking_id',
-            value: widget.bookingId,
-          ),
-          callback: (_) => _loadNegoData(silent: true),
-        )
-        ..subscribe();
-    } catch (_) {
-      // Offline fallback
-    }
-  }
+  void _subscribeRealtime() {}
 
   @override
   void dispose() {
-    _realtimeChannel?.unsubscribe();
     _msgCtrl.dispose();
     super.dispose();
   }
@@ -87,7 +54,7 @@ class _CustomNegoScreenState extends State<CustomNegoScreen> {
   Future<void> _loadNegoData({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final repo = BookingRepositoryImpl(SupabaseService.client);
+      final repo = BookingRepositoryImpl();
       final offers = await repo.getOffers(widget.bookingId);
       final msgs = await repo.getMessages(widget.bookingId);
 
@@ -139,7 +106,7 @@ class _CustomNegoScreenState extends State<CustomNegoScreen> {
 
     setState(() => _isProcessing = true);
     try {
-      final repo = BookingRepositoryImpl(SupabaseService.client);
+      final repo = BookingRepositoryImpl();
       await repo.acceptOffer(
         bookingId: widget.bookingId,
         offerId: offer.id,
@@ -229,8 +196,8 @@ class _CustomNegoScreenState extends State<CustomNegoScreen> {
                 Navigator.of(ctx).pop();
 
                 try {
-                  final repo = BookingRepositoryImpl(SupabaseService.client);
-                  final userId = SupabaseService.client.auth.currentUser?.id ?? 'user-id';
+                  final repo = BookingRepositoryImpl();
+                  final userId = AuthSession.currentUserId;
                   await repo.submitOffer(
                     bookingId: widget.bookingId,
                     offeredBy: userId,
@@ -264,8 +231,8 @@ class _CustomNegoScreenState extends State<CustomNegoScreen> {
     _msgCtrl.clear();
 
     try {
-      final repo = BookingRepositoryImpl(SupabaseService.client);
-      final userId = SupabaseService.client.auth.currentUser?.id ?? 'user-id';
+      final repo = BookingRepositoryImpl();
+      final userId = AuthSession.currentUserId;
       await repo.sendMessage(
         bookingId: widget.bookingId,
         senderId: userId,

@@ -20,6 +20,7 @@ class ArtistProfileModel {
   final String status;
   final String? rawPhone;
   final String? avatarUrl;
+  final List<String> portfolioUrls;
 
   const ArtistProfileModel({
     required this.id,
@@ -41,9 +42,14 @@ class ArtistProfileModel {
     this.status = 'pending',
     this.rawPhone,
     this.avatarUrl,
+    this.portfolioUrls = const [],
   });
 
-  String get maskedPhone => PhoneMasker.maskPhone(rawPhone ?? '', isDpPaid: false);
+  String get maskedPhone {
+    final p = rawPhone ?? '';
+    if (p.contains('*')) return p;
+    return PhoneMasker.maskPhone(p, isDpPaid: false);
+  }
 
   String get categoryDisplay {
     switch (category) {
@@ -63,26 +69,47 @@ class ArtistProfileModel {
   }
 
   factory ArtistProfileModel.fromJson(Map<String, dynamic> json) {
+    final rawPortfolios = json['portfolios'];
+    final List<String> parsedPortfolios = [];
+    if (rawPortfolios is List) {
+      for (final item in rawPortfolios) {
+        if (item is Map<String, dynamic> && item['url'] != null) {
+          parsedPortfolios.add(item['url'].toString());
+        } else if (item is String && item.isNotEmpty) {
+          parsedPortfolios.add(item);
+        }
+      }
+    }
+
     return ArtistProfileModel(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      displayName: json['display_name'] as String,
-      category: json['category'] as String,
-      baseCity: json['base_city'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? json['userId'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? json['displayName'] as String? ?? '',
+      category: json['category'] as String? ?? 'sandiwara-full',
+      baseCity: json['base_city'] as String? ?? json['baseCity'] as String? ?? '',
       baseDistrict: json['base_district'] as String?,
-      baseLat: json['base_lat'] != null ? (json['base_lat'] as num).toDouble() : null,
-      baseLng: json['base_lng'] != null ? (json['base_lng'] as num).toDouble() : null,
+      baseLat: json['base_lat'] != null
+          ? (json['base_lat'] is num
+              ? (json['base_lat'] as num).toDouble()
+              : double.tryParse(json['base_lat'].toString()))
+          : null,
+      baseLng: json['base_lng'] != null
+          ? (json['base_lng'] is num
+              ? (json['base_lng'] as num).toDouble()
+              : double.tryParse(json['base_lng'].toString()))
+          : null,
       coverageCities: (json['coverage_cities'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       description: json['description'] as String?,
       autoAccept: json['auto_accept'] as bool? ?? false,
-      priceMin: json['price_min'] as int? ?? 0,
-      priceMax: json['price_max'] as int? ?? 0,
-      ratingAvg: json['rating_avg'] != null ? (json['rating_avg'] as num).toDouble() : 0.0,
-      totalJob: json['total_job'] as int? ?? 0,
+      priceMin: (json['price_min'] as num?)?.toInt() ?? 0,
+      priceMax: (json['price_max'] as num?)?.toInt() ?? 0,
+      ratingAvg: (json['rating_avg'] as num?)?.toDouble() ?? 0.0,
+      totalJob: (json['total_job'] as num?)?.toInt() ?? 0,
       videoUrls: (json['video_urls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       status: json['status'] as String? ?? 'pending',
       rawPhone: json['phone'] as String? ?? json['masked_phone'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      portfolioUrls: parsedPortfolios,
     );
   }
 }

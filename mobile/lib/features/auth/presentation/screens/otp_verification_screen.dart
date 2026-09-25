@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/main_shell_screen.dart';
@@ -41,7 +40,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final repo = AuthRepositoryImpl(SupabaseService.client);
+      final repo = AuthRepositoryImpl();
       await repo.verifyPhoneOtp(widget.phone, token);
 
       if (!mounted) return;

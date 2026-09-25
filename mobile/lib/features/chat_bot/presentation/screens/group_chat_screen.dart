@@ -31,13 +31,15 @@ class GroupChatScreen extends StatefulWidget {
   final String bookingCode;
   final String eventDate;
   final String venue;
+  final String? artistAvatarUrl;
 
   const GroupChatScreen({
     super.key,
-    this.artistName = 'Dian Anic & Anica Nada',
-    this.bookingCode = '#TRL-20251115-8892',
-    this.eventDate = '15 Nov 2025',
-    this.venue = 'Resepsi Pernikahan (Gunungjati, Cirebon)',
+    this.artistName = 'Grup Pantura',
+    this.bookingCode = '#TRL-2026',
+    this.eventDate = 'Hajatan',
+    this.venue = 'Cirebon / Indramayu',
+    this.artistAvatarUrl,
   });
 
   @override
@@ -52,37 +54,36 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     const GroupChatMessage(
       id: 'm1',
       sender: 'troupe',
-      senderName: 'Manajemen Mbak Dian Anic',
-      text: 'Sugeng siang Bpk. Sohibul Hajat, salam budaya 🙏 Kami dari manajemen Mbak Dian Anic siap mempersiapkan pentas hajatan di Gunungjati Cirebon.',
-      time: '10:15 WIB',
+      senderName: 'Manajemen Orkes',
+      text: 'Sampurasun! Salam hormat dari rombongan pimpinan. DP 20% sudah terverifikasi di sistem Escrow Tarlink. Kanal koordinasi teknis resmi dibuka.',
+      time: '10:00 WIB',
+      statusTag: 'Resmi',
     ),
     const GroupChatMessage(
       id: 'm2',
       sender: 'troupe',
-      senderName: 'Manajemen Mbak Dian Anic',
-      text: 'Untuk denah panggung dan pasokan daya genset 15.000 Watt apakah titik drop kru truk panggung sudah aman jalan masuknya?',
-      time: '10:16 WIB',
+      senderName: 'Manajemen Orkes',
+      text: 'Untuk kebutuhan panggung dan genset, mohon info akses jalan menuju lokasi hajatan apa bisa dilalui truk tronton/engkel?',
+      time: '10:02 WIB',
     ),
     const GroupChatMessage(
       id: 'm3',
       sender: 'user',
       senderName: 'Sohibul Hajat',
-      text: 'Siang Mas Broto. Jalan desa sudah diaspal lebar 5 meter, aman untuk truk fuso sound system. Ini saya kirim foto denah terop pengantin.',
+      text: 'Siang Mas Broto. Jalan desa sudah diaspal lebar 5 meter, aman untuk truk fuso sound system. Denah terop pengantin sudah kami siapkan.',
       time: '10:20 WIB',
     ),
     const GroupChatMessage(
       id: 'm4',
       sender: 'user',
       senderName: 'Sohibul Hajat',
-      text: 'Denah tenda & arah hadap panggung utama',
+      text: 'Denah tenda & arah hadap panggung utama menghadap ke timur sesuai adat setempat.',
       time: '10:21 WIB',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBNqI48e0GsbZkJuSS-RHINyojd5eJFMpD2NLmYuHkM7yEzrt5AWKoVq9BlIpxKKKtiy8ZPrmfjs7hhDY9XqMFu_-8lDHDksBYga6FMNFAIveqhQLX6YVGQ9YnVFk_vxh5g2X_sI2mxRdbtCjOu2WiWg8qVJNQ6F6U7dNQHslbftCTPuSLlfmiqhtYJbpwBH5o597f2SMQV1jgavlaBJrvsHMw2yk9nauFYHTz0L4ZagZxb3R8avSp2DQ',
-      imageTitle: 'IMG_DENAH_TEROP.JPG',
     ),
     const GroupChatMessage(
       id: 'm5',
       sender: 'troupe',
-      senderName: 'Manajemen Mbak Dian Anic',
+      senderName: 'Manajemen Orkes',
       text: 'Matur kesuwun Pak! Sangat jelas. Kami jadwalkan tim teknisi sound check tiba H-1 pukul 16:00 WIB nggih.',
       time: '10:25 WIB',
       statusTag: 'Jadwal Tersimpan',
@@ -159,11 +160,17 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ),
                   Stack(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 20,
-                        backgroundImage: NetworkImage(
-                          'https://lh3.googleusercontent.com/aida-public/AB6AXuB0FlD67Div0hvmGow2DtJUK8OA3-Qwu4-Lhd13GUVl-K_2N9giV7g0VoASjdBExJ4xaxZFd5eRaQ7vYHp6gnflQfHKUoWmaZ6yzws1T5wrZXCizF-FLzjYRVQttAb8dXOpTQRJKahMTrxeK8d0nVBeJRnRtoqStgwFe79Rly9qcSLW7n10HXK5_8TV3MPobPnWpo8C7dmEXMZ4_JxHhVwxoDrqb0mSN7kA--Ab145sa1N4oo-EKXmhEA',
-                        ),
+                        backgroundColor: AppColors.primaryContainer,
+                        backgroundImage: (widget.artistAvatarUrl != null &&
+                                widget.artistAvatarUrl!.startsWith('http'))
+                            ? NetworkImage(widget.artistAvatarUrl!)
+                            : null,
+                        child: (widget.artistAvatarUrl == null ||
+                                !widget.artistAvatarUrl!.startsWith('http'))
+                            ? const Icon(Icons.theater_comedy, size: 22, color: AppColors.primary)
+                            : null,
                       ),
                       Positioned(
                         bottom: 0,
@@ -463,11 +470,17 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            const CircleAvatar(
+            CircleAvatar(
               radius: 14,
-              backgroundImage: NetworkImage(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuAGU0VHbAExi6BpYHBJ5xec_fvB2Vw_Xc2ZCCuBkZJCoLq2-sS26bTuHIfo1RLaNKfJxgAIF1PSZLZ3k_LzZpQhD6wsR7attpVXRic_8FEuIhXrprFcyOgRlnIL1nOdKtb4ufsTtR5zysz_eszBXmXdxDKkBEqdHrsOfmqK8Q8Cxp5TKdLZxF6K7VcNIbUHZVSy9pqfTcskl4jbkKvt-XhhuDNe8gxUhrfNPPwY0i4b9tba8soQ07oP3A',
-              ),
+              backgroundColor: AppColors.primaryContainer,
+              backgroundImage: (widget.artistAvatarUrl != null &&
+                      widget.artistAvatarUrl!.startsWith('http'))
+                  ? NetworkImage(widget.artistAvatarUrl!)
+                  : null,
+              child: (widget.artistAvatarUrl == null ||
+                      !widget.artistAvatarUrl!.startsWith('http'))
+                  ? const Icon(Icons.theater_comedy, size: 14, color: AppColors.primary)
+                  : null,
             ),
             const SizedBox(width: 8),
           ],

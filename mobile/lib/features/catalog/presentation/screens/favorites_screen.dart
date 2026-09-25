@@ -4,8 +4,12 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../data/models/artist_profile_model.dart';
 import 'artist_detail_screen.dart';
 
+import '../../domain/repositories/catalog_repository.dart';
+import '../../data/repositories/catalog_repository_impl.dart';
+
 class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({super.key});
+  final CatalogRepository? repository;
+  const FavoritesScreen({super.key, this.repository});
 
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();
@@ -13,45 +17,46 @@ class FavoritesScreen extends StatefulWidget {
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
   String _selectedFilter = 'all';
+  bool _isLoading = true;
+  List<ArtistProfileModel> _favorites = [];
 
-  final List<ArtistProfileModel> _favorites = [
-    const ArtistProfileModel(
-      id: 'fav-1',
-      userId: 'u-1',
-      displayName: 'Dian Anic & Anica Nada',
-      category: 'Tarling Dangdut Modern',
-      baseCity: 'Indramayu',
-      baseDistrict: 'Jatibarang',
-      priceMin: 18500000,
-      ratingAvg: 4.9,
-      totalJob: 342,
-    ),
-    const ArtistProfileModel(
-      id: 'fav-2',
-      userId: 'u-2',
-      displayName: 'Susi Arzety & Arzety Nada',
-      category: 'Tarling Kombinasi & Jaipong',
-      baseCity: 'Cirebon',
-      baseDistrict: 'Kedawung',
-      priceMin: 15000000,
-      ratingAvg: 4.8,
-      totalJob: 215,
-    ),
-    const ArtistProfileModel(
-      id: 'fav-3',
-      userId: 'u-3',
-      displayName: 'Hj Dadang Anesa & Rolani Nada',
-      category: 'Tarling Klasik Pantura',
-      baseCity: 'Cirebon',
-      baseDistrict: 'Plumbon',
-      priceMin: 16000000,
-      ratingAvg: 4.9,
-      totalJob: 195,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    setState(() => _isLoading = true);
+    try {
+      final repo = widget.repository ?? CatalogRepositoryImpl();
+      final artists = await repo.searchArtists();
+      if (mounted) {
+        setState(() {
+          _favorites = artists;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[FavoritesScreen] Gagal memuat data dari database: $e');
+      if (mounted) {
+        setState(() {
+          _favorites = [];
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
     final filtered = _favorites.where((a) {
       if (_selectedFilter == 'pantura') return a.category.toLowerCase().contains('dangdut');
       if (_selectedFilter == 'klasik') return a.category.toLowerCase().contains('klasik');
@@ -280,7 +285,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ArtistDetailScreen(artist: artist),
+                            builder: (_) => ArtistDetailScreen(
+                              artist: artist,
+                              repository: CatalogRepositoryImpl(),
+                            ),
                           ),
                         );
                       },

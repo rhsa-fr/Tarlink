@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
-import '../../../../core/network/supabase_client.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
 import '../../data/models/artist_profile_model.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -87,35 +86,27 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final repo = widget.repository ?? CatalogRepositoryImpl(SupabaseService.client);
+      final repo = widget.repository ?? CatalogRepositoryImpl();
       final results = await repo.searchArtists();
 
       final Set<String> seenIds = {};
-      final Set<String> seenNames = {};
-      final List<ArtistProfileModel> combined = [];
+      final List<ArtistProfileModel> list = [];
 
       for (final a in results) {
-        final nameKey = a.displayName.toLowerCase().trim();
-        if (seenIds.add(a.id) && seenNames.add(nameKey)) {
-          combined.add(a);
+        if (seenIds.add(a.id)) {
+          list.add(a);
         }
       }
 
-      for (final m in _getMockArtists()) {
-        final nameKey = m.displayName.toLowerCase().trim();
-        if (!seenIds.contains(m.id) && !seenNames.contains(nameKey)) {
-          seenIds.add(m.id);
-          seenNames.add(nameKey);
-          combined.add(m);
-        }
-      }
-
-      _allArtists = combined.isNotEmpty ? combined : _getMockArtists();
-    } catch (_) {
-      _allArtists = _getMockArtists();
+      _allArtists = list;
+    } catch (e) {
+      debugPrint('[CatalogSearch] Gagal mengambil data real dari database: $e');
+      _allArtists = [];
     } finally {
-      _applyLocalFilters();
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        _applyLocalFilters();
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -170,6 +161,7 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
       list.sort((a, b) => b.totalJob.compareTo(a.totalJob));
     }
 
+    if (!mounted) return;
     setState(() => _filteredArtists = list);
   }
 
@@ -193,21 +185,6 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
   String _monthName(int m) {
     const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     return (m >= 1 && m <= 12) ? months[m] : '';
-  }
-
-  String _getStageImage(String category, int index) {
-    switch (category) {
-      case 'sandiwara-full':
-        return 'https://images.unsplash.com/photo-1469488865564-c2de10f69f96?w=800&auto=format&fit=crop&q=80';
-      case 'tarling-dangdut':
-        return 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80';
-      case 'organ-tunggal':
-        return 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80';
-      case 'biduan-solo':
-        return 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80';
-      default:
-        return 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80';
-    }
   }
 
   void _openFilterModal() {
@@ -917,7 +894,6 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
   Widget _buildStitchArtistCard(ArtistProfileModel artist, int index) {
     final isFav = _favoriteIds.contains(artist.id);
     final isPlaying = _playingSampleId == artist.id;
-    final stageUrl = _getStageImage(artist.category, index);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -937,14 +913,27 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
             children: [
               AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  stageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: AppColors.surfaceContainerHigh,
-                    child: const Icon(Icons.image, color: AppColors.textMuted, size: 48),
-                  ),
-                ),
+                child: (artist.avatarUrl != null && artist.avatarUrl!.startsWith('http'))
+                    ? Image.network(
+                        artist.avatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: AppColors.surfaceContainerHigh,
+                          child: const Icon(Icons.theater_comedy, color: AppColors.textMuted, size: 48),
+                        ),
+                      )
+                    : Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF8B1E1E), Color(0xFFD4A017)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.theater_comedy, color: Colors.white70, size: 48),
+                        ),
+                      ),
               ),
               // Gradient Scrim
               Positioned.fill(
@@ -1306,137 +1295,5 @@ class _CatalogSearchScreenState extends State<CatalogSearchScreen> {
       ),
     );
   }
-
-  List<ArtistProfileModel> _getMockArtists() {
-    return const [
-      ArtistProfileModel(
-        id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
-        userId: '11111111-1111-4111-a111-111111111111',
-        displayName: 'Sandiwara Dharma Kudeta',
-        category: 'sandiwara-full',
-        baseCity: 'Indramayu',
-        baseDistrict: 'Kandanghaur',
-        coverageCities: ['Indramayu', 'Subang', 'Cirebon', 'Majalengka'],
-        description: 'Grup Sandiwara legendaris Pantura pimpinan H. Waryono. Membawakan lakon babad Dermayu, bodoran khas Pantura, dan panggung megah tata lampu modern.',
-        ratingAvg: 4.9,
-        totalJob: 148,
-        priceMin: 9500000,
-        priceMax: 15000000,
-        rawPhone: '081234567801',
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb',
-        userId: '22222222-2222-4222-a222-222222222222',
-        displayName: 'Sandiwara Candra Kirana',
-        category: 'sandiwara-full',
-        baseCity: 'Cirebon',
-        baseDistrict: 'Gegesik',
-        coverageCities: ['Cirebon', 'Indramayu', 'Kuningan', 'Majalengka'],
-        description: 'Sanggar Sandiwara klasik Cirebonan dengan alunan gamelan laras slendro murni, lakon purwa, dan busana wayang wong megah.',
-        ratingAvg: 4.8,
-        totalJob: 112,
-        priceMin: 11000000,
-        priceMax: 16500000,
-        rawPhone: '081234567802',
-        autoAccept: false,
-      ),
-      ArtistProfileModel(
-        id: 'cccccccc-cccc-4ccc-cccc-cccccccccccc',
-        userId: '33333333-3333-4333-a333-333333333333',
-        displayName: 'Tarling Dangdut Hj. Dewi Kirana',
-        category: 'tarling-dangdut',
-        baseCity: 'Indramayu',
-        baseDistrict: 'Jatibarang',
-        coverageCities: ['Indramayu', 'Cirebon', 'Majalengka', 'Subang'],
-        description: 'Ratu Tarling Dangdut Pantura Hj. Dewi Kirana dengan lagu-lagu hits legendaris, sound system horeg pantura, dan deretan biduan papan atas.',
-        ratingAvg: 4.9,
-        totalJob: 215,
-        priceMin: 7000000,
-        priceMax: 12000000,
-        rawPhone: '081234567803',
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: 'dddddddd-dddd-4ddd-dddd-dddddddddddd',
-        userId: '44444444-4444-4444-a444-444444444444',
-        displayName: 'Organ Tunggal Rolani Diva',
-        category: 'organ-tunggal',
-        baseCity: 'Cirebon',
-        baseDistrict: 'Arjawinangun',
-        coverageCities: ['Cirebon', 'Indramayu', 'Majalengka'],
-        description: 'Sajian Organ Tunggal Pantura modern, keyboardis virtuoso Mas Rolani dengan 3 biduan cantik dan sound system 5000 watt jernih.',
-        ratingAvg: 4.7,
-        totalJob: 89,
-        priceMin: 2200000,
-        priceMax: 4500000,
-        rawPhone: '081234567804',
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: 'eeeeeeee-eeee-4eee-eeee-eeeeeeeeeeee',
-        userId: '55555555-5555-4555-a555-555555555555',
-        displayName: 'Sindy Puspita (Biduan & MC)',
-        category: 'biduan-solo',
-        baseCity: 'Indramayu',
-        baseDistrict: 'Karangampel',
-        coverageCities: ['Indramayu', 'Cirebon'],
-        description: 'Bintang tamu penyanyi solo tarling kenthrung & dangdut Pantura, merangkap MC pembawa acara hajatan pengantin & sunatan.',
-        ratingAvg: 4.8,
-        totalJob: 45,
-        priceMin: 1500000,
-        priceMax: 1500000,
-        rawPhone: '081234567805',
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: 'ffffffff-ffff-4fff-ffff-ffffffffffff',
-        userId: '66666666-6666-4666-a666-666666666666',
-        displayName: 'Dian Anic & Anica Nada',
-        category: 'tarling-dangdut',
-        baseCity: 'Indramayu',
-        baseDistrict: 'Jatibarang',
-        coverageCities: ['Indramayu', 'Cirebon', 'Subang', 'Majalengka', 'Kuningan'],
-        description: 'Diva Tarling Dangdut Pantura Dian Anic bersama orkes Anica Nada, membawakan lagu hits Pantura dan aransemen panggung spektakuler.',
-        ratingAvg: 4.9,
-        totalJob: 340,
-        priceMin: 18500000,
-        priceMax: 28000000,
-        rawPhone: '081234567806',
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: '01010101-0101-4101-a101-010101010101',
-        userId: '77777777-7777-4777-a777-777777777777',
-        displayName: 'Susi Arzety - Nada Cantika',
-        category: 'tarling-dangdut',
-        baseCity: 'Cirebon',
-        baseDistrict: 'Kedawung',
-        coverageCities: ['Cirebon', 'Indramayu', 'Kuningan', 'Majalengka'],
-        description: 'Pentas live Dangdut Tarling Nada Cantika pimpinan Susi Arzety, melayani hajatan akbar dengan panggung rigging dan sound horeg.',
-        ratingAvg: 4.8,
-        totalJob: 215,
-        priceMin: 15000000,
-        priceMax: 24000000,
-        rawPhone: '081234567807',
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: '02020202-0202-4202-a202-020202020202',
-        userId: '88888888-8888-4888-a888-888888888888',
-        displayName: 'Wa Kancil Klasik Tarling',
-        category: 'tarling-klasik',
-        baseCity: 'Indramayu',
-        baseDistrict: 'Karangampel',
-        coverageCities: ['Indramayu', 'Cirebon', 'Majalengka'],
-        description: 'Alunan Tarling Klasik Dermayon asli dengan petikan gitar akustik, suling miring, dan sinden sepuh khas Pantura tempo dulu.',
-        ratingAvg: 4.9,
-        totalJob: 180,
-        priceMin: 8000000,
-        priceMax: 14000000,
-        rawPhone: '081234567808',
-        autoAccept: true,
-      ),
-    ];
-  }
 }
+

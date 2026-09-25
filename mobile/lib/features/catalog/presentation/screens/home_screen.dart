@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/tarlink_logo.dart';
-import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../data/models/artist_profile_model.dart';
@@ -38,71 +37,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadArtists() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final repo = widget.repository ?? CatalogRepositoryImpl(SupabaseService.client);
+      final repo = widget.repository ?? CatalogRepositoryImpl();
       final results = await repo.searchArtists();
       if (mounted) {
         setState(() {
-          _artists = results.isNotEmpty ? results : _mockArtists();
+          _artists = results;
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HomeScreen] Gagal mengambil data real dari database: $e');
       if (mounted) {
         setState(() {
-          _artists = _mockArtists();
+          _artists = [];
           _isLoading = false;
         });
       }
     }
-  }
-
-  List<ArtistProfileModel> _mockArtists() {
-    return const [
-      ArtistProfileModel(
-        id: 'mock-1',
-        userId: 'u-1',
-        displayName: 'Dian Anic & Anica Nada',
-        category: 'tarling-dangdut',
-        baseCity: 'Indramayu',
-        baseDistrict: 'Jatibarang',
-        coverageCities: ['Indramayu', 'Cirebon', 'Subang', 'Majalengka', 'Kuningan'],
-        priceMin: 18500000,
-        priceMax: 28000000,
-        ratingAvg: 4.9,
-        totalJob: 340,
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: 'mock-2',
-        userId: 'u-2',
-        displayName: 'Susi Arzety - Nada Cantika',
-        category: 'tarling-dangdut',
-        baseCity: 'Cirebon',
-        baseDistrict: 'Kedawung',
-        coverageCities: ['Cirebon', 'Indramayu', 'Kuningan', 'Majalengka'],
-        priceMin: 15000000,
-        priceMax: 24000000,
-        ratingAvg: 4.8,
-        totalJob: 215,
-        autoAccept: true,
-      ),
-      ArtistProfileModel(
-        id: 'mock-3',
-        userId: 'u-3',
-        displayName: 'Wa Kancil Klasik Tarling',
-        category: 'tarling-klasik',
-        baseCity: 'Indramayu',
-        baseDistrict: 'Karangampel',
-        coverageCities: ['Indramayu', 'Cirebon'],
-        priceMin: 8000000,
-        priceMax: 14000000,
-        ratingAvg: 4.9,
-        totalJob: 180,
-        autoAccept: true,
-      ),
-    ];
   }
 
   @override
@@ -259,7 +213,11 @@ class _HomeScreenState extends State<HomeScreen> {
           } else {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const CatalogSearchScreen()),
+              MaterialPageRoute(
+                builder: (_) => CatalogSearchScreen(
+                  repository: widget.repository ?? CatalogRepositoryImpl(),
+                ),
+              ),
             );
           }
         },
@@ -557,7 +515,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CatalogSearchScreen(initialCategory: c['slug'] as String),
+                        builder: (_) => CatalogSearchScreen(
+                          initialCategory: c['slug'] as String,
+                          repository: widget.repository ?? CatalogRepositoryImpl(),
+                        ),
                       ),
                     );
                   },
@@ -654,16 +615,40 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 310,
           child: _isLoading
               ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _artists.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 14),
-                  itemBuilder: (context, index) {
-                    final artist = _artists[index];
-                    return _buildTroupeCard(context, artist);
-                  },
-                ),
+              : _artists.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.theater_comedy, size: 40, color: AppColors.textMuted),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Belum ada rombongan terdaftar di database',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: _loadArtists,
+                            icon: const Icon(Icons.refresh, size: 16),
+                            label: const Text('Muat Ulang Database'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _artists.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 14),
+                      itemBuilder: (context, index) {
+                        final artist = _artists[index];
+                        return _buildTroupeCard(context, artist);
+                      },
+                    ),
         ),
       ],
     );
@@ -692,7 +677,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 140,
                   width: double.infinity,
                   color: AppColors.surfaceContainerHigh,
-                  child: artist.avatarUrl != null && artist.avatarUrl!.startsWith('http')
+                  child: (artist.avatarUrl != null && artist.avatarUrl!.startsWith('http'))
                       ? Image.network(
                           artist.avatarUrl!,
                           fit: BoxFit.cover,
@@ -712,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(9999),
                   ),
                   child: Text(
-                    artist.category,
+                    artist.categoryDisplay,
                     style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontSize: 10,
@@ -837,7 +822,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ArtistDetailScreen(artist: artist),
+                              builder: (_) => ArtistDetailScreen(artist: artist, repository: widget.repository),
                             ),
                           );
                         },

@@ -24,6 +24,9 @@ class BookingModel {
   final bool cashConfirmed;
   final DateTime? paidDpAt;
   final DateTime? completedAt;
+  final String? artistName;
+  final String? packageName;
+  final String? artistAvatarUrl;
 
   const BookingModel({
     required this.id,
@@ -51,6 +54,9 @@ class BookingModel {
     this.cashConfirmed = false,
     this.paidDpAt,
     this.completedAt,
+    this.artistName,
+    this.packageName,
+    this.artistAvatarUrl,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -80,6 +86,9 @@ class BookingModel {
       cashConfirmed: json['cash_confirmed'] as bool? ?? false,
       paidDpAt: json['paid_dp_at'] != null ? DateTime.tryParse(json['paid_dp_at'] as String) : null,
       completedAt: json['completed_at'] != null ? DateTime.tryParse(json['completed_at'] as String) : null,
+      artistName: json['artist_name'] as String?,
+      packageName: json['package_name'] as String?,
+      artistAvatarUrl: json['artist_avatar_url'] as String?,
     );
   }
 }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/haversine.dart';
+import '../../../../core/widgets/tarlink_logo.dart';
 import '../../../auth/presentation/screens/account_screen.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import 'order_confirmation_screen.dart';
@@ -17,6 +18,8 @@ class BookingFormScreen extends StatefulWidget {
   final String packageName;
   final double artistBaseLat;
   final double artistBaseLng;
+  final String? artistAvatarUrl;
+  final DateTime? eventDate;
 
   const BookingFormScreen({
     super.key,
@@ -27,6 +30,8 @@ class BookingFormScreen extends StatefulWidget {
     required this.packageName,
     this.artistBaseLat = -6.3263,
     this.artistBaseLng = 108.3222,
+    this.artistAvatarUrl,
+    this.eventDate,
   });
 
   @override
@@ -42,7 +47,14 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     text: "Lagu buka terop pengantin ingin 'Waru Doyong' dan 'Juragan Empang'. Panggung menghadap ke arah selatan jalan desa.",
   );
 
-  DateTime _eventDate = DateTime.now().add(const Duration(days: 14));
+  late DateTime _eventDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventDate = widget.eventDate ?? DateTime.now().add(const Duration(days: 14));
+    _recalculateDistance();
+  }
   String _selectedEventType = 'Pernikahan (Resepsi & Hiburan Desa)';
   final String _selectedCity = 'Cirebon';
   final String _selectedDistrict = 'Gunungjati';
@@ -68,12 +80,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     '800 - 1.200',
     '> 1.500 Tamu',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _recalculateDistance();
-  }
 
   void _recalculateDistance() {
     final dist = calculateHaversineDistance(
@@ -123,8 +129,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final repo = BookingRepositoryImpl(SupabaseService.client);
-      final customerId = SupabaseService.client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
+      final repo = BookingRepositoryImpl();
+      final customerId = AuthSession.currentUserId;
 
       final booking = await repo.createBooking(
         customerId: customerId,
@@ -191,11 +197,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  Image.network(
-                    'https://lh3.googleusercontent.com/aida/AEtjO1U9hAdtIEYquHeUCRgPfhZxGBsHOmAADGKpUOXlxxQrh71SIu4_wShAts8QS54rNh23MrcZskE3M6ov5AqlwCDdrVDAf8vhR4voMYu0xLS7UWbhOf4osQiDXN3BUD4MQqOZV9xWkMVSFbg2QXmUjJ2y8T4oh0kKR2zin028bWLi131L8boqGFHiNQmDTm4ms-s7VczNNJV4WtCodTDn2hxkXdpV-RGjorU7nkzSI7HdIOm6l9qDCeDruOK1',
-                    height: 28,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary, size: 24),
-                  ),
+                  const TarlinkLogo(height: 28),
                   const SizedBox(width: 8),
                   Text(
                     'Formulir Booking Hajat',
@@ -210,11 +212,17 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const AccountScreen()));
                     },
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 16,
-                      backgroundImage: NetworkImage(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuDQzv_Dk0O_iXgTvC2fX5q2Ra5nMhk0V6gWLe22OVFVSbSF0uGiICiPoi-UUFv3veiiDLTJqejkCV4MCYKOKOJIUQn5K7h-ZJiGYo7mc8JnjyW6UE3Usc7hl38gAlBlVRASmzj85_FjCpyZw974XN_6-cw2aiGefOM5C2Dh92yexki3Qf4kyaDjbFo8RAQx-uq3P-CNFjPKCjR2GOEWbfp5wUoP_srtQpXwtk4lJdwcTi8sa7Hp5MXosw',
-                      ),
+                      backgroundColor: AppColors.primaryContainer,
+                      backgroundImage: (AuthSession.currentUser?.avatarUrl != null &&
+                              AuthSession.currentUser!.avatarUrl!.startsWith('http'))
+                          ? NetworkImage(AuthSession.currentUser!.avatarUrl!)
+                          : null,
+                      child: (AuthSession.currentUser?.avatarUrl == null ||
+                              !AuthSession.currentUser!.avatarUrl!.startsWith('http'))
+                          ? const Icon(Icons.person, size: 18, color: AppColors.primary)
+                          : null,
                     ),
                   ),
                 ],
@@ -363,11 +371,32 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                           color: AppColors.surfaceContainerHigh,
                         ),
                         clipBehavior: Clip.antiAlias,
-                        child: Image.network(
-                          'https://lh3.googleusercontent.com/aida-public/AB6AXuDSF_hdu4d4H36fku9fha7PTFvYKqZo5fplyX3N02BB-r1GalxeoG_I4TIHjq0oEs2nyKQ0j2glz-C0oDzv5muuHXjYYxLxYRWwo-tmvPArWLrUU3mgesf4drUXISDiejtst5xupPrAZowTHQThixRY0_zktde-Fx-Xmods-Lw3BlMwmWwkc_IMrQEIyalrw-R19aO-XQU1bvK9r4IGeoPOnU05VuBn7BstqLX5-9NSOpFS8YRBf024IQ',
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppColors.primary),
-                        ),
+                        child: (widget.artistAvatarUrl != null && widget.artistAvatarUrl!.startsWith('http'))
+                            ? Image.network(
+                                widget.artistAvatarUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: AppColors.primaryContainer,
+                                  child: const Center(
+                                    child: Icon(Icons.theater_comedy, color: AppColors.primary, size: 36),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.primary.withValues(alpha: 0.8),
+                                      AppColors.secondary.withValues(alpha: 0.8),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.theater_comedy, color: Colors.white, size: 36),
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(

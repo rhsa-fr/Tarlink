@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../catalog/data/models/package_model.dart';
 import '../../domain/repositories/group_repository.dart';
+import '../../../catalog/data/repositories/catalog_repository_impl.dart';
 
 class GroupDashboardScreen extends StatefulWidget {
   final String artistId;
@@ -50,42 +51,22 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> with Single
     try {
       final dates = await widget.repository.getBlockedDates(widget.artistId);
       final summary = await widget.repository.getPayoutSummary(widget.artistId);
+      final catalogRepo = CatalogRepositoryImpl();
+      final pkgs = await catalogRepo.getPackagesByArtist(widget.artistId);
 
-      setState(() {
-        _blockedDates = dates;
-        _totalHold = summary['totalHold'] as int? ?? _totalHold;
-        _totalCompleted = summary['totalCompleted'] as int? ?? _totalCompleted;
-      });
-    } catch (_) {
-      // Offline mock fallback
-      setState(() {
-        _blockedDates = [
-          DateTime.now().add(const Duration(days: 3)),
-          DateTime.now().add(const Duration(days: 4)),
-        ];
-        if (_packages.isEmpty) {
-          _packages.addAll([
-            PackageModel(
-              id: 'p-1',
-              artistId: widget.artistId,
-              name: 'Organ Tunggal Fullday',
-              durationHours: 12,
-              price: 8000000,
-              includes: 'Sound 5.000W, 2 Penyanyi, 1 Pemain Keyboard.',
-            ),
-            PackageModel(
-              id: 'p-2',
-              artistId: widget.artistId,
-              name: 'Tarling Dangdut Kombinasi',
-              durationHours: 14,
-              price: 15000000,
-              includes: 'Sound Gantung 15.000W, 4 Biduan, Gamelan lengkap.',
-            ),
-          ]);
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _blockedDates = dates;
+          _totalHold = summary['totalHold'] as int? ?? _totalHold;
+          _totalCompleted = summary['totalCompleted'] as int? ?? _totalCompleted;
+          _packages.clear();
+          _packages.addAll(pkgs);
+        });
+      }
+    } catch (e) {
+      debugPrint('[GroupDashboard] Error loading data from DB: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

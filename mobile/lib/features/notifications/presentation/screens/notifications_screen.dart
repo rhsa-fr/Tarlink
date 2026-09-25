@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -22,44 +23,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
     try {
-      final userId = SupabaseService.client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
-      final data = await SupabaseService.client
-          .from('notifications')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
-
-      setState(() => _notifications = (data as List).map((e) => e as Map<String, dynamic>).toList());
+      final userId = AuthSession.currentUserId;
+      final res = await ApiClient.get('/notifications?user_id=$userId');
+      if (res['notifications'] is List) {
+        setState(() => _notifications = (res['notifications'] as List).map((e) => e as Map<String, dynamic>).toList());
+      } else {
+        setState(() => _notifications = []);
+      }
     } catch (_) {
-      // Mock data for preview
-      setState(() {
-        _notifications = [
-          {
-            'id': 'notif-1',
-            'title': 'DP 20% Berhasil Diterima!',
-            'body': 'Pesanan TRG-2026-0042 telah terbayar. Tanggal 20 Zulhijah resmi dikunci di kalender Anda.',
-            'type': 'payment_success',
-            'is_read': false,
-            'created_at': '2026-09-07T12:00:00Z',
-          },
-          {
-            'id': 'notif-2',
-            'title': 'Pengingat Pentas H-1',
-            'body': 'Besok hajatan di Desa Kandanghaur dimulai jam 09.00 WIB. Harap siapkan personil dan alat.',
-            'type': 'event_reminder',
-            'is_read': true,
-            'created_at': '2026-09-06T08:00:00Z',
-          },
-          {
-            'id': 'notif-3',
-            'title': 'Pencairan Dana (Disbursement) Sukses',
-            'body': 'Dana sisa DP sebesar Rp 2.300.000 telah ditransfer ke rekening BRI Anda.',
-            'type': 'payout_completed',
-            'is_read': true,
-            'created_at': '2026-09-05T14:30:00Z',
-          },
-        ];
-      });
+      setState(() => _notifications = []);
     } finally {
       setState(() => _isLoading = false);
     }

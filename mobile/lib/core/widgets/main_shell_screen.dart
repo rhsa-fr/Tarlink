@@ -8,7 +8,6 @@ import '../../features/catalog/presentation/screens/catalog_search_screen.dart';
 import '../../features/chat_bot/presentation/widgets/floating_chat_bot.dart';
 import '../../features/profile_group/data/repositories/group_repository_impl.dart';
 import '../../features/profile_group/presentation/screens/group_tab_screen.dart';
-import '../network/supabase_client.dart';
 import '../theme/app_colors.dart';
 
 import '../../features/auth/presentation/screens/account_screen.dart';
@@ -41,7 +40,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
     }
 
     try {
-      final repo = AuthRepositoryImpl(SupabaseService.client);
+      final repo = AuthRepositoryImpl();
       final user = await repo.getCurrentUser();
       if (mounted) {
         setState(() {
@@ -57,16 +56,16 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final client = SupabaseService.client;
     final screens = <Widget>[
       HomeScreen(
         onExploreTap: () => setState(() => _currentIndex = 1),
+        repository: CatalogRepositoryImpl(),
       ),
-      CatalogSearchScreen(repository: CatalogRepositoryImpl(client)),
+      CatalogSearchScreen(repository: CatalogRepositoryImpl()),
       const MyBookingsScreen(),
-      GroupTabScreen(repository: GroupRepositoryImpl(client)),
+      GroupTabScreen(repository: GroupRepositoryImpl()),
       if (_isAdmin)
-        AdminPanelScreen(repository: AdminRepositoryImpl(client)),
+        AdminPanelScreen(repository: AdminRepositoryImpl()),
       const AccountScreen(),
     ];
 

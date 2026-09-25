@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/auth_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/models/user_model.dart';
@@ -28,7 +28,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<void> _loadUserProfile() async {
     try {
-      final repo = AuthRepositoryImpl(SupabaseService.client);
+      final repo = AuthRepositoryImpl();
       final user = await repo.getCurrentUser();
       if (mounted) {
         setState(() {
@@ -159,7 +159,7 @@ class _AccountScreenState extends State<AccountScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  await SupabaseService.client.auth.signOut();
+                  await AuthSession.signOut();
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,

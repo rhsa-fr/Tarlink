@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -55,7 +54,7 @@ class _RegisterStallScreenState extends State<RegisterStallScreen> {
     setState(() {
       _isLoading = false;
       _isKtpUploaded = true;
-      _ktpUrl = 'https://mock-tarlingbook.supabase.co/storage/v1/object/public/ktp-verifications/${widget.userId}_ktp.jpg';
+      _ktpUrl = 'https://tarlingbook.id/storage/ktp-verifications/${widget.userId}_ktp.jpg';
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,7 +75,7 @@ class _RegisterStallScreenState extends State<RegisterStallScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final repo = GroupRepositoryImpl(SupabaseService.client);
+      final repo = GroupRepositoryImpl();
       await repo.registerStall(
         userId: widget.userId,
         displayName: _nameCtrl.text.trim(),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/bot_message_model.dart';
 import '../screens/group_chat_screen.dart';
@@ -106,17 +106,16 @@ class _ChatBotSheetState extends State<ChatBotSheet> {
     _scrollToBottom();
 
     try {
-      final userId = SupabaseService.client.auth.currentUser?.id ?? '00000000-0000-0000-0000-000000000001';
-      final res = await SupabaseService.client.functions.invoke(
-        'bot-engine',
+      final res = await ApiClient.post(
+        '/bot',
         body: {
-          'user_id': userId,
-          'text': userMsg.text,
+          'query': userMsg.text,
         },
       );
 
-      final reply = (res.data as Map<String, dynamic>?)?['reply'] as String? ??
-          'Pesan diterima oleh asisten pasar.';
+      final reply = (res is Map<String, dynamic>)
+          ? (res['reply'] as String? ?? 'Pesan diterima oleh asisten pasar.')
+          : 'Pesan diterima oleh asisten pasar.';
 
       setState(() {
         _messages.add(BotMessageModel(

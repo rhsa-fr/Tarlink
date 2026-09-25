@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/network/supabase_client.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -26,9 +26,9 @@ class _SnapPaymentScreenState extends State<SnapPaymentScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      // Simulate webhook trigger from client development environment
-      await SupabaseService.client.functions.invoke(
-        'midtrans-hook',
+      // Trigger payment webhook via backend API
+      await ApiClient.post(
+        '/webhooks/midtrans',
         body: {
           'order_id': widget.bookingCode,
           'status_code': '200',

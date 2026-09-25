@@ -52,4 +52,26 @@ class UserModel {
       'created_at': createdAt?.toIso8601String(),
     };
   }
+
+  UserModel copyWith({
+    String? id,
+    String? name,
+    String? phone,
+    String? email,
+    String? role,
+    String? avatarUrl,
+    bool? isVerified,
+    DateTime? createdAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      isVerified: isVerified ?? this.isVerified,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

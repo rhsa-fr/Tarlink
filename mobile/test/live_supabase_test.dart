@@ -1,39 +1,51 @@
-// ignore_for_file: avoid_print
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:mobile/core/constants/supabase_constants.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:mobile/core/network/api_client.dart';
 import 'package:mobile/features/catalog/data/repositories/catalog_repository_impl.dart';
 
 void main() {
-  test('Live Supabase query test for searchArtists', () async {
-    final client = SupabaseClient(
-      SupabaseConstants.defaultUrl,
-      SupabaseConstants.defaultAnonKey,
-    );
+  test('CatalogRepository query test with client', () async {
+    final mockHttpClient = MockClient((request) async {
+      return http.Response(
+        jsonEncode([
+          {
+            'id': 'a1',
+            'slug': 'candra-kirana',
+            'display_name': 'Sandiwara Candra Kirana',
+            'category': 'sandiwara-full',
+            'base_city': 'Indramayu',
+            'base_district': 'Kandanghaur',
+            'verified_status': 'verified',
+            'price_rate': 25000000,
+          },
+          {
+            'id': 'a2',
+            'slug': 'diana-sastra',
+            'display_name': 'Tarling Dangdut Dian Sastra',
+            'category': 'tarling-dangdut',
+            'base_city': 'Cirebon',
+            'base_district': 'Kedawung',
+            'verified_status': 'verified',
+            'price_rate': 18000000,
+          }
+        ]),
+        200,
+        headers: {'content-type': 'application/json'},
+      );
+    });
 
-    final repo = CatalogRepositoryImpl(client);
+    ApiClient.setHttpClient(mockHttpClient);
+    final repo = CatalogRepositoryImpl();
 
-    print('Testing searchArtists with no filters...');
-    final allArtists = await repo.searchArtists();
-    print('All artists count: ${allArtists.length}');
-    for (final a in allArtists) {
-      print('Artist: ${a.displayName}, category: ${a.category}, city: ${a.baseCity}');
-    }
+    final artists = await repo.searchArtists();
+    expect(artists.length, equals(2));
+    expect(artists.first.displayName, contains('Candra Kirana'));
+    expect(artists.last.category, equals('tarling-dangdut'));
 
-    print('\nTesting searchArtists with city: Indramayu...');
-    try {
-      final indramayuArtists = await repo.searchArtists(city: 'Indramayu');
-      print('Indramayu artists count: ${indramayuArtists.length}');
-    } catch (e, stack) {
-      print('ERROR on city filter: $e\n$stack');
-    }
-
-    print('\nTesting searchArtists with category: tarling-dangdut...');
-    try {
-      final catArtists = await repo.searchArtists(category: 'tarling-dangdut');
-      print('Cat artists count: ${catArtists.length}');
-    } catch (e, stack) {
-      print('ERROR on category filter: $e\n$stack');
-    }
+    ApiClient.setHttpClient(null);
   });
 }
+
+
